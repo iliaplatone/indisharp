@@ -206,7 +206,6 @@ namespace INDI.Forms
             if (device == Device || device == string.Empty)
             {
                 TabPage dev = new TabPage();
-                dev.BorderStyle = BorderStyle.FixedSingle;
                 dev.Name = device;
                 dev.Text = device;
                 dev.Size = new Size(490, 367);
@@ -225,7 +224,6 @@ namespace INDI.Forms
             {
                 TabControl tab = (TabControl)DevicesConnected.Controls.Find(device, false)[0].Controls.Find(device + "_Groups", false)[0];
                 TabPage grp = new TabPage();
-                grp.BorderStyle = BorderStyle.FixedSingle;
                 grp.Size = new Size(480, 334);
                 grp.Name = name;
                 grp.Text = name;
@@ -284,7 +282,7 @@ namespace INDI.Forms
                                 t.Checked = n.value;
                                 t.Location = new Point(30, y);
                                 t.CheckedChanged += valueChanged;
-                                y += 28;
+                                y += 26;
                                 vector.Controls.Add(t);
                             }
                             else
@@ -298,7 +296,7 @@ namespace INDI.Forms
                                 t.Checked = n.value;
                                 t.Location = new Point(30, y);
                                 t.CheckedChanged += valueChanged;
-                                y += 28;
+                                y += 26;
                                 vector.Controls.Add(t);
                             }
                         }
@@ -362,15 +360,15 @@ namespace INDI.Forms
                             l.Text = n.Label;
                             TextBox t = new TextBox();
                             t.BorderStyle = BorderStyle.FixedSingle;
-                            t.Name = "NUMBER_" + n.Name;
                             t.Text = n.value.ToString();
+                            t.Name = "NUMBER_" + n.Name;
                             t.Enabled = (e.Vector.Permission != "ro");
                             l.Location = new Point(30, y);
                             t.Location = new Point(330, y - 5);
                             l.Size = new Size(100, 18);
                             t.Size = new Size(100, 18);
                             t.TextChanged += valueChanged;
-                            y += 28;
+                            y += 26;
                             vector.Controls.Add(l);
                             vector.Controls.Add(t);
                         }
@@ -436,7 +434,7 @@ namespace INDI.Forms
                             l.Location = new Point(30, y);
                             t.Location = new Point(330, y - 5);
                             t.TextChanged += valueChanged;
-                            y += 28;
+                            y += 26;
                             vector.Controls.Add(l);
                             vector.Controls.Add(t);
                         }

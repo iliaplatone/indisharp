@@ -46,6 +46,7 @@ namespace INDI
             {
                 try
                 {
+                    QueryProperties("CONNECTION");
                     return GetSwitch("CONNECTION", "CONNECT").value;
                 }
                 catch

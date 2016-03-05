@@ -497,7 +497,7 @@ namespace INDI
             {
                 try
                 {
-                    return 1 << (Int32)GetNumber("CCD_INFO", "CCD_BITSPERPIXEL").value;
+                    return 65536;
                 }
                 catch
                 {

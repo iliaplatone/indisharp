@@ -156,6 +156,34 @@ namespace INDI
             }
         }
 
+        public void SyncToAltAz(Double Altitude, Double Azimuth)
+        {
+            CoordSet = INDICoordSet.SYNC;
+            Double[] values = { Altitude, Azimuth };
+            SetNumberVector("HORIZONTAL_COORD", values);
+        }
+
+        public void SlewToAltAz(Double Altitude, Double Azimuth)
+        {
+            CoordSet = INDICoordSet.SLEW;
+            Double[] values = { Altitude, Azimuth };
+            SetNumberVector("HORIZONTAL_COORD", values);
+        }
+
+        public void SyncToRaDec(Double RightAscension, Double Declination)
+        {
+            CoordSet = INDICoordSet.SYNC;
+            Double[] values = { RightAscension, Declination };
+            SetNumberVector("EQUATORIAL_EOD_COORD", values);
+        }
+
+        public void SlewToRaDec(Double RightAscension, Double Declination)
+        {
+            CoordSet = INDICoordSet.SLEW;
+            Double[] values = { RightAscension, Declination };
+            SetNumberVector("EQUATORIAL_EOD_COORD", values);
+        }
+
         public void Abort()
         {
             try
