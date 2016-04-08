@@ -60,7 +60,7 @@ namespace INDI
         {
             try
             {
-                SetSwitchVector("CCD_EXPOSURE", (Int32)type);
+                SetSwitchVector("CCD_FRAME_TYPE", (Int32)type);
                 SetNumber("CCD_EXPOSURE", "CCD_EXPOSURE_VALUE", duration);
             }
             catch

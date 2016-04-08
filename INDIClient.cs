@@ -166,7 +166,14 @@ namespace INDI
             }
             set
             {
-                _inputString += value.Replace("\r", "").Replace("\n", "");
+                _inputString = value.Replace("\r", "").Replace("\n", "");
+                byte[] tosend = Encoding.UTF8.GetBytes(_inputString);
+                MemoryStream ms = new MemoryStream(tosend);
+
+                ReadThread = new Thread(new ParameterizedThreadStart(_readThread));
+                ReadThread.IsBackground = true;
+                ReadThread.Name = "INDISharp Client read thread";
+                ReadThread.Start(ms);
             }
         }
 
@@ -257,12 +264,12 @@ namespace INDI
                 }
             }
 			if (stream != null)
-			{
-				ReadThread = new Thread (_readThread);
-				ReadThread.IsBackground = true;
-				ReadThread.Name = "INDISharp Client read thread";
-				ReadThread.Start ();
-				return true;
+            {
+                ReadThread = new Thread(new ParameterizedThreadStart(_readThread));
+                ReadThread.IsBackground = true;
+                ReadThread.Name = "INDISharp Client read thread";
+                ReadThread.Start(null);
+                return true;
 			}
 			return false;
         }
@@ -315,7 +322,7 @@ namespace INDI
             }
         }
 
-	    void _readThread()
+	    void _readThread(object s = null)
         {
             string action = "";
             string target = "";
@@ -344,8 +351,8 @@ namespace INDI
             {
                 XmlReaderSettings settings = new XmlReaderSettings();
                 settings.ConformanceLevel = ConformanceLevel.Fragment;
-
-                XmlReader reader = XmlReader.Create(stream, settings);
+                
+                XmlReader reader = XmlReader.Create(s != null ? (Stream)s : stream, settings);
                 while (reader.Read() && ThreadsRunning)
                 {
                     try
