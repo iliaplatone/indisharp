@@ -18,7 +18,7 @@ using System;
 
 namespace INDI
 {
-    class INDIFilterWheel : INDIDevice
+	public class INDIFilterWheel : INDIDevice
     {
         #region Constructors / Initialization
         public INDIFilterWheel(string name, INDIClient host)

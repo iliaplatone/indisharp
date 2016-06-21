@@ -19,13 +19,13 @@ using System;
 namespace INDI
 {
     #region Enums
-    enum INDIFocuserMotion
+	public enum INDIFocuserMotion
     {
         INWARD = 0,
         OUTWARD,
     };
     #endregion
-    class INDIFocuser : INDIDevice
+	public class INDIFocuser : INDIDevice
     {
         #region Constructors / Initialization
         public INDIFocuser(string name, INDIClient host)

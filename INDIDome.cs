@@ -19,25 +19,25 @@ using System;
 namespace INDI
 {
     #region Enums
-    enum INDIDomeMotion
+	public enum INDIDomeMotion
     {
         CW = 0,
         CCW,
     };
 
-    enum INDIDomeShutterState
+	public enum INDIDomeShutterState
     {
         OPEN = 0,
         CLOSE,
     };
 
-    enum INDIDomeGoTo
+	public enum INDIDomeGoTo
     {
         HOME = 0,
         PARK,
     };
     #endregion
-    class INDIDome : INDIDevice
+	public class INDIDome : INDIDevice
     {
         #region Constructors / Initialization
         public INDIDome(string name, INDIClient host)
