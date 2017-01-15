@@ -15,11 +15,157 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 
 namespace INDI
 {
+    #region Custom Event Argument classes
+    public class INDIDomeNumberEventArgs : IsNewNumberEventArgs
+    {
+        public INDIDomeNumberType Type;
+        public List<INDINumber> Values;
+        public INDIDomeNumberEventArgs(INumberVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "ABS_DOME_POSITION":
+                    Type = INDIDomeNumberType.AbsPosition;
+                    break;
+                case "REL_DOME_POSITION":
+                    Type = INDIDomeNumberType.RelPosition;
+                    break;
+                case "DOME_MEASUREMENTS":
+                    Type = INDIDomeNumberType.Measurements;
+                    break;
+                case "DOME_SPEED":
+                    Type = INDIDomeNumberType.Speed;
+                    break;
+                case "DOME_TIMER":
+                    Type = INDIDomeNumberType.Timer;
+                    break;
+                case "DOME_PARAMS":
+                    Type = INDIDomeNumberType.Params;
+                    break;
+
+                case "TIME_LST":
+                    Type = INDIDomeNumberType.TimeLst;
+                    break;
+                case "GEOGRAPHIC_COORD":
+                    Type = INDIDomeNumberType.GeographicCoord;
+                    break;
+                case "ATMOSPHERE":
+                    Type = INDIDomeNumberType.Atmosphere;
+                    break;
+                default:
+                    Type = INDIDomeNumberType.Other;
+                    break;
+            }
+        }
+    }
+    public class INDIDomeSwitchEventArgs : IsNewSwitchEventArgs
+    {
+        public INDIDomeSwitchType Type;
+        public List<INDISwitch> Values;
+        public INDIDomeSwitchEventArgs(ISwitchVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "DOME_MOTION":
+                    Type = INDIDomeSwitchType.Motion;
+                    break;
+                case "DOME_ABORT_MOTION":
+                    Type = INDIDomeSwitchType.AbortMotion;
+                    break;
+                case "DOME_SHUTTER":
+                    Type = INDIDomeSwitchType.Shutter;
+                    break;
+                case "DOME_GOTO":
+                    Type = INDIDomeSwitchType.Goto;
+                    break;
+                case "DOME_AUTOSYNC":
+                    Type = INDIDomeSwitchType.Autosync;
+                    break;
+
+                case "CONNECTION":
+                    Type = INDIDomeSwitchType.Connection;
+                    break;
+                case "UPLOAD_MODE":
+                    Type = INDIDomeSwitchType.UploadMode;
+                    break;
+                default:
+                    Type = INDIDomeSwitchType.Other;
+                    break;
+            }
+        }
+    }
+    public class INDIDomeTextEventArgs : IsNewTextEventArgs
+    {
+        public INDIDomeTextType Type;
+        public List<INDIText> Values;
+        public INDIDomeTextEventArgs(ITextVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "DEVICE_PORT":
+                    Type = INDIDomeTextType.DevicePort;
+                    break;
+                case "TIME_UTC":
+                    Type = INDIDomeTextType.TimeUtc;
+                    break;
+                case "UPLOAD_SETTINGS":
+                    Type = INDIDomeTextType.UploadSettings;
+                    break;
+                case "ACTIVE_DEVICES":
+                    Type = INDIDomeTextType.ActiveDevices;
+                    break;
+                default:
+                    Type = INDIDomeTextType.Other;
+                    break;
+            }
+        }
+    }
+    #endregion
     #region Enums
-	public enum INDIDomeMotion
+    public enum INDIDomeNumberType
+    {
+        TimeLst,
+        GeographicCoord,
+        Atmosphere,
+        Other,
+
+        Speed,
+        Timer,
+        RelPosition,
+        AbsPosition,
+        Params,
+        Measurements
+    }
+    public enum INDIDomeSwitchType
+    {
+        Connection,
+        UploadMode,
+        Other,
+
+        Motion,
+        AbortMotion,
+        Shutter,
+        Goto,
+        Autosync
+    }
+    public enum INDIDomeTextType
+    {
+        DevicePort,
+        TimeUtc,
+        UploadSettings,
+        ActiveDevices,
+        Other,
+    }
+    public enum INDIDomeMotion
     {
         CW = 0,
         CCW,
@@ -39,12 +185,71 @@ namespace INDI
     #endregion
 	public class INDIDome : INDIDevice
     {
+        public event EventHandler<INDIDomeNumberEventArgs> IsNewNumber = null;
+        public event EventHandler<INDIDomeSwitchEventArgs> IsNewSwitch = null;
+        public event EventHandler<INDIDomeTextEventArgs> IsNewText = null;
         #region Constructors / Initialization
-        public INDIDome(string name, INDIClient host)
-            : base(name, host)
+        public INDIDome(string name, INDIClient host, bool client = true)
+            : base(name, host, client)
         {
-            Name = name;
-            Host = host;
+            if (!client)
+            {
+                AddNumberVector(new INumberVector(Name, "DOME_SPEED", "Dome speed", "Motion Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("DOME_SPEED_VALUE", "Dome speed in RPM", "%3.1f", 0.00, 180.0, 0.1, 0.0)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "DOME_MOTION", "Move dome", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("DOME_CW", "Move dome Clockwise", true),
+                new INDISwitch("DOME_CCW", "Move dome counter clockwise", false)
+            }));
+                AddNumberVector(new INumberVector(Name, "DOME_TIMER", "Dome speed", "Motion Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("DOME_TIMER_VALUE", "Move the dome for n milliseconds", "%5.0f", 0.00, 60000.0, 1.0, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "REL_DOME_POSITION", "Dome Relative position", "Motion Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("DOME_RELATIVE_POSITION", "Move n degrees azimuth in the direction selected", "%3.4f", 0.00, 180.0, 0.0001, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "ABS_DOME_POSITION", "Dome Absolute position", "Motion Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("DOME_ABSOLUTE_POSITION", "Move dome to n absolute azimuth angle in degrees", "%3.4f", 0.00, 180.0, 0.0001, 0.0)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "DOME_ABORT_MOTION", "Abort dome motion", "Motion Control", "rw", "AtMostOne", new List<INDISwitch>
+            {
+                new INDISwitch("ABORT", "Abort dome motion", false)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "DOME_SHUTTER", "Open/Close dome shutter", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("SHUTTER_OPEN", "Open dome shutter", false),
+                new INDISwitch("SHUTTER_CLOSE", "Close dome shutter", true)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "DOME_GOTO", "", "Main Control", "rw", "AtMostOne", new List<INDISwitch>
+            {
+                new INDISwitch("DOME_HOME", "Go to home position", false),
+                new INDISwitch("DOME_PARK", "Go to park position", true)
+            }));
+                AddNumberVector(new INumberVector(Name, "DOME_PARAMS", "Dome speed", "Main Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("HOME_POSITION", "Dome home absolute position", "%3.1f", 0.00, 180.0, 0.1, 0.0),
+                new INDINumber("PARK_POSITION", "Dome parking absolute position", "%3.1f", 0.00, 180.0, 0.1, 0.0),
+                new INDINumber("AUTOSYNC_THRESHOLD", "Slaved dome autosync threshold", "%3.1f", 0.00, 180.0, 0.1, 0.0)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "DOME_AUTOSYNC", "Enable/Disable dome slaving", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("DOME_AUTOSYNC_ENABLE", "Enable dome slaving", false),
+                new INDISwitch("DOME_AUTOSYNC_DISABLE", "Disable dome slaving", true)
+            }));
+                AddNumberVector(new INumberVector(Name, "DOME_MEASUREMENTS", "Dome informtations", "Dome Info", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("DM_DOME_RADIUS", "Dome radius (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0),
+                new INDINumber("DOME_SHUTTER_WIDTH", "Dome shutter width (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0),
+                new INDINumber("DM_NORTH_DISPLACEMENT", "Displacement to the north of the mount center (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0),
+                new INDINumber("DM_EAST_DISPLACEMENT", "Displacement to the east of the mount center (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0),
+                new INDINumber("DM_UP_DISPLACEMENT", "UP displacement of the mount center (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0),
+                new INDINumber("DM_OTA_OFFSET", "Distance from the optical axis to the mount center (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0)
+            }));
+            }
         }
         #endregion
 
@@ -81,6 +286,60 @@ namespace INDI
                 SetSwitchVector("DOME_GOTO", (Int32)INDIDomeGoTo.PARK);
             }
             catch { }
+        }
+
+        public override void isNewNumber(Object sender, IsNewNumberEventArgs e)
+        {
+            base.isNewNumber(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewNumber?.Invoke(this, new INDIDomeNumberEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public override void isNewSwitch(Object sender, IsNewSwitchEventArgs e)
+        {
+            base.isNewSwitch(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewSwitch?.Invoke(this, new INDIDomeSwitchEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public override void isNewText(Object sender, IsNewTextEventArgs e)
+        {
+            base.isNewText(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewText?.Invoke(this, new INDIDomeTextEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         #endregion
 

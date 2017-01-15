@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace INDI
@@ -29,13 +31,13 @@ namespace INDI
         List<ISwitchVector> Switches;
         List<IBlobVector> Blobs;
        	public INDIClient Host = null;
-        public event EventHandler<IsDelPropertyEventArgs> IsDelProperty;
-        public event EventHandler<IsNewTextEventArgs> IsNewText;
-        public event EventHandler<IsNewNumberEventArgs> IsNewNumber;
-        public event EventHandler<IsNewSwitchEventArgs> IsNewSwitch;
-        public event EventHandler<IsNewBlobEventArgs> IsNewBlob;
-        public INDIBaseDevice(string n, INDIClient host)
+        public INDIBaseDevice(string n, INDIClient host, bool client = true)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            if (host == null)
+                throw new ArgumentException("host cannot be null");
+            IsClient = client;
             Host = host;
             Name = n;
             Texts = new List<ITextVector>();
@@ -49,64 +51,64 @@ namespace INDI
             host.IsNewBlob += isNewBlob;
         }
 
-        void isDelProperty(Object sender, IsDelPropertyEventArgs e)
+        public virtual void isDelProperty(Object sender, IsDelPropertyEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if (e.Device == Name)
             {
                 Switches.Remove(GetSwitchVector(e.Vector));
                 Blobs.Remove(GetBlobVector(e.Vector));
                 Numbers.Remove(GetNumberVector(e.Vector));
                 Texts.Remove(GetTextVector(e.Vector));
-                if (IsDelProperty != null)
-                    IsDelProperty(this, e);
             }
         }
 
-        void isNewText(Object sender, IsNewTextEventArgs e)
+        public virtual void isNewText(Object sender, IsNewTextEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if (e.Device == Name)
             {
                 ITextVector v = GetTextVector(e.Vector.Name);
                 if (v == null)
                     AddTextVector(e.Vector);
-                if (IsNewText != null)
-                    IsNewText(this, e);
             }
         }
 
-        void isNewNumber(Object sender, IsNewNumberEventArgs e)
+        public virtual void isNewNumber(Object sender, IsNewNumberEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if (e.Device == Name)
             {
                 INumberVector v = GetNumberVector(e.Vector.Name);
                 if (v == null)
                     AddNumberVector(e.Vector);
-                if (IsNewNumber != null)
-                    IsNewNumber(this, e);
             }
         }
 
-        void isNewSwitch(Object sender, IsNewSwitchEventArgs e)
+        public virtual void isNewSwitch(Object sender, IsNewSwitchEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if (e.Device == Name)
             {
                 ISwitchVector v = GetSwitchVector(e.Vector.Name);
                 if (v == null)
                     AddSwitchVector(e.Vector);
-                if (IsNewSwitch != null)
-                    IsNewSwitch(this, e);
             }
         }
 
-        void isNewBlob(Object sender, IsNewBlobEventArgs e)
+        public virtual void isNewBlob(Object sender, IsNewBlobEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if (e.Device == Name)
             {
                 IBlobVector v = GetBlobVector(e.Vector.Name);
                 if (v == null)
                     AddBlobVector(e.Vector);
-                if (IsNewBlob != null)
-                    IsNewBlob(Host, e);
             }
         }
 
@@ -190,15 +192,17 @@ namespace INDI
 
         public ISwitchVector GetSwitchVector(string name)
         {
-            foreach (ISwitchVector s in Host.GetDevice(Name).Switches)
+			INDIDevice d = Host.GetDevice (Name);
+            foreach (ISwitchVector s in d.Switches)
                 if (s.Name == name && name != "")
                     return s;
             return null;
         }
 
         public INumberVector GetNumberVector(string name)
-        {
-            foreach (INumberVector s in Host.GetDevice(Name).Numbers)
+		{
+			INDIDevice d = Host.GetDevice (Name);
+			foreach (INumberVector s in d.Numbers)
                 if (s.Name == name && name != "")
                     return s;
             return null;
@@ -293,7 +297,7 @@ namespace INDI
         {
             INumberVector v = GetNumberVector(vector);
             if (v == null)
-                return "";
+                throw new ArgumentException();
             Double[] values = new Double[v.Values.Count];
             for (Int32 i = 0; i < values.Length; i++)
             {
@@ -309,7 +313,7 @@ namespace INDI
         {
             ITextVector v = GetTextVector(vector);
             if (v == null)
-                return "";
+                throw new ArgumentException();
             string[] values = new string[v.Values.Count];
             for (Int32 i = 0; i < values.Length; i++)
             {
@@ -325,7 +329,7 @@ namespace INDI
         {
             ISwitchVector v = GetSwitchVector(vector);
             if (v == null)
-                return "";
+                throw new ArgumentException();
             Boolean[] values = new Boolean[v.Values.Count];
             for (Int32 i = 0; i < values.Length; i++)
             {
@@ -352,7 +356,7 @@ namespace INDI
         {
             IBlobVector v = GetBlobVector(vector);
             if (v == null)
-                return "";
+                throw new ArgumentException();
             byte[][] values = new byte[v.Values.Count][];
             for (Int32 i = 0; i < values.Length; i++)
             {
@@ -367,7 +371,7 @@ namespace INDI
         public string SetNumberVector(string vector, Double[] values)
         {
             if (GetNumberVector(vector) == null)
-                return "";
+                throw new ArgumentException();
             XElement[] items = new XElement[values.Length];
             for (Int32 i = 0; i < GetNumberVector(vector).Values.Count; i++)
             {
@@ -380,13 +384,15 @@ namespace INDI
                     new XAttribute("name", vector),
                     items).ToString();
             Host.OutputString = ret;
+            if (IsClient)
+                DefineNumbers(vector);
             return ret;
         }
 
         public string SetTextVector(string vector, string[] values)
         {
             if (GetTextVector(vector) == null)
-                return "";
+                throw new ArgumentException();
             XElement[] items = new XElement[values.Length];
             for (Int32 i = 0; i < GetTextVector(vector).Values.Count; i++)
             {
@@ -399,13 +405,15 @@ namespace INDI
                     new XAttribute("name", vector),
                     items).ToString();
             Host.OutputString = ret;
+            if (IsClient)
+                DefineTexts(vector);
             return ret;
         }
 
         public string SetSwitchVector(string vector, Int32 index)
         {
             if (GetSwitchVector(vector) == null)
-                return "";
+                throw new ArgumentException();
             XElement[] items = new XElement[GetSwitchVector(vector).Values.Count];
             for (Int32 i = 0; i < GetSwitchVector(vector).Values.Count; i++)
             {
@@ -418,13 +426,15 @@ namespace INDI
                     new XAttribute("name", vector),
                     items).ToString();
             Host.OutputString = ret;
+            if (IsClient)
+                DefineSwitches(vector);
             return ret;
         }
 
         public string SetSwitchVector(string vector, Boolean[] values)
         {
             if (GetSwitchVector(vector) == null)
-                return "";
+                throw new ArgumentException();
             XElement[] items = new XElement[values.Length];
             for (Int32 i = 0; i < GetSwitchVector(vector).Values.Count; i++)
             {
@@ -443,7 +453,7 @@ namespace INDI
         public string SetBlobVector(string vector, byte[][] values)
         {
             if (GetBlobVector(vector) == null)
-                return "";
+                throw new ArgumentException();
             XElement[] items = new XElement[values.Length];
             for (Int32 i = 0; i < GetBlobVector(vector).Values.Count; i++)
             {
@@ -602,6 +612,7 @@ namespace INDI
             Host.OutputString = ret;
             return ret;
         }
+        public bool IsClient { get; internal set; }
     }
 }
 

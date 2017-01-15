@@ -8,4 +8,3 @@
 [assembly: AssemblyTrademark ("")]
 [assembly: AssemblyCulture ("")]
 [assembly: AssemblyVersion ("0.7.0.*")]
-

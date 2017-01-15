@@ -14,6 +14,7 @@
 *  along with INDISharp.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Collections.Generic;
 
 namespace INDI
 {
@@ -28,9 +29,43 @@ namespace INDI
     public class INDIDevice : INDIBaseDevice, IDisposable
     {
         #region Constructors / Initialization
-        public INDIDevice(string name, INDIClient host)
-            : base(name, host)
+        public INDIDevice(string name, INDIClient host, bool client = true)
+            : base(name, host, client)
         {
+            Host.AddDevice(this);
+            if (!client)
+            {
+                AddSwitchVector(new ISwitchVector(Name, "CONNECTION", "Connection", "", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("CONNECT", "Connect", true),
+                new INDISwitch("DISCONNECT", "Disconnect", false)
+            }));
+                AddTextVector(new ITextVector(Name, "DEVICE_PORT", "Connection port", "Connection", "ro", "", new List<INDIText>
+            {
+                new INDIText("PORT", "Connection port", "COM1")
+            }));
+                AddNumberVector(new INumberVector(Name, "TIME_LST", "Local sidereal time", "Device Properties", "ro", "", new List<INDINumber>
+            {
+                new INDINumber("LST", "Local sidereal time", "%16.0f", 0.0, 800000000.0, 0.0, 0.0)
+            }));
+                AddTextVector(new ITextVector(Name, "TIME_UTC", "UTC Time & Offset", "Device Properties", "ro", "", new List<INDIText>
+            {
+                new INDIText("UTC", "UTC time", "0"),
+                new INDIText("OFFSET", "UTC offset", "0")
+            }));
+                AddNumberVector(new INumberVector(Name, "GEOGRAPHIC_COORD", "Earth geodetic coordinate", "Device Properties", "ro", "", new List<INDINumber>
+            {
+                new INDINumber("LAT", "Site latitude", "%2.3f", -90.0, 90.0, 0.0, 0.0),
+                new INDINumber("LONG", "Site longitude", "%2.3f", 0.0, 360.0, 0.0, 0.0),
+                new INDINumber("ELEV", "Site elevation", "%2.3f", 0.0, 360.0, 0.0, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "ATMOSPHERE", "Weather conditions", "Device Properties", "ro", "", new List<INDINumber>
+            {
+                new INDINumber("TEMPERATURE", "Temperature (K)", "%3.3f", -273.0, 180.0, 0.0, 0.0),
+                new INDINumber("PRESSURE", "Pressure (hPa)", "%5.3f", 0.0, 400.0, 0.0, 0.0),
+                new INDINumber("HUMIDITY", "Humidity (%)", "%3.3f", 0.0, 100.0, 0.0, 0.0)
+            }));
+            }
         }
         public void Dispose()
         {

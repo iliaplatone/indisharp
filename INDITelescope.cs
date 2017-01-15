@@ -15,10 +15,180 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 
 namespace INDI
 {
+    #region Custom Event Argument classes
+    public class INDITelescopeNumberEventArgs : IsNewNumberEventArgs
+    {
+        public INDITelescopeNumberType Type;
+        public List<INDINumber> Values;
+        public INDITelescopeNumberEventArgs(INumberVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "EQUATORIAL_COORD":
+                    Type = INDITelescopeNumberType.EquatorialCoord;
+                    break;
+                case "EQUATORIAL_EOD_COORD":
+                    Type = INDITelescopeNumberType.EquatorialEodCoord;
+                    break;
+                case "TARGET_EOD_COORD":
+                    Type = INDITelescopeNumberType.TargetEodCoord;
+                    break;
+                case "HORIZONTAL_COORD":
+                    Type = INDITelescopeNumberType.HorizontalCoord;
+                    break;
+                case "TELESCOPE_TIMED_GUIDE_NS":
+                    Type = INDITelescopeNumberType.TimedGuideNS;
+                    break;
+                case "TELESCOPE_TIMED_GUIDE_WE":
+                    Type = INDITelescopeNumberType.TimedGuideWE;
+                    break;
+                case "TELESCOPE_PARK_POSITION":
+                    Type = INDITelescopeNumberType.ParkPosition;
+                    break;
+                case "TELESCOPE_INFO":
+                    Type = INDITelescopeNumberType.Informations;
+                    break;
+
+                case "TIME_LST":
+                    Type = INDITelescopeNumberType.TimeLst;
+                    break;
+                case "GEOGRAPHIC_COORD":
+                    Type = INDITelescopeNumberType.GeographicCoord;
+                    break;
+                case "ATMOSPHERE":
+                    Type = INDITelescopeNumberType.Atmosphere;
+                    break;
+                default:
+                    Type = INDITelescopeNumberType.Other;
+                    break;
+            }
+        }
+    }
+    public class INDITelescopeSwitchEventArgs : IsNewSwitchEventArgs
+    {
+        public INDITelescopeSwitchType Type;
+        public List<INDISwitch> Values;
+        public INDITelescopeSwitchEventArgs(ISwitchVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "ON_COORD_SET":
+                    Type = INDITelescopeSwitchType.OnCoordSet;
+                    break;
+                case "TELESCOPE_MOTION_NS":
+                    Type = INDITelescopeSwitchType.MotionNS;
+                    break;
+                case "TELESCOPE_MOTION_WE":
+                    Type = INDITelescopeSwitchType.MotionWE;
+                    break;
+                case "TELESCOPE_SLEW_RATE":
+                    Type = INDITelescopeSwitchType.SlewRate;
+                    break;
+                case "TELESCOPE_PARK":
+                    Type = INDITelescopeSwitchType.Park;
+                    break;
+                case "TELESCOPE_PARK_OPTION":
+                    Type = INDITelescopeSwitchType.ParkOption;
+                    break;
+                case "TELESCOPE_ABORT_MOTION":
+                    Type = INDITelescopeSwitchType.AbortMotion;
+                    break;
+                case "TELESCOPE_TRACK_RATE":
+                    Type = INDITelescopeSwitchType.TrackRate;
+                    break;
+                case "TELESCOPE_PIER_SIDE":
+                    Type = INDITelescopeSwitchType.PierSide;
+                    break;
+
+                case "CONNECTION":
+                    Type = INDITelescopeSwitchType.Connection;
+                    break;
+                case "UPLOAD_MODE":
+                    Type = INDITelescopeSwitchType.UploadMode;
+                    break;
+                default:
+                    Type = INDITelescopeSwitchType.Other;
+                    break;
+            }
+        }
+    }
+    public class INDITelescopeTextEventArgs : IsNewTextEventArgs
+    {
+        public INDITelescopeTextType Type;
+        public List<INDIText> Values;
+        public INDITelescopeTextEventArgs(ITextVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "DEVICE_PORT":
+                    Type = INDITelescopeTextType.DevicePort;
+                    break;
+                case "TIME_UTC":
+                    Type = INDITelescopeTextType.TimeUtc;
+                    break;
+                case "UPLOAD_SETTINGS":
+                    Type = INDITelescopeTextType.UploadSettings;
+                    break;
+                case "ACTIVE_DEVICES":
+                    Type = INDITelescopeTextType.ActiveDevices;
+                    break;
+                default:
+                    Type = INDITelescopeTextType.Other;
+                    break;
+            }
+        }
+    }
+    #endregion
     #region Enums
+    public enum INDITelescopeNumberType
+    {
+        TimeLst,
+        GeographicCoord,
+        Atmosphere,
+        Other,
+
+        EquatorialCoord,
+        EquatorialEodCoord,
+        TargetEodCoord,
+        HorizontalCoord,
+        TimedGuideNS,
+        TimedGuideWE,
+        ParkPosition,
+        Informations,
+    }
+    public enum INDITelescopeSwitchType
+    {
+        Connection,
+        UploadMode,
+        Other,
+
+        OnCoordSet,
+        MotionNS,
+        MotionWE,
+        SlewRate,
+        Park,
+        ParkOption,
+        AbortMotion,
+        TrackRate,
+        PierSide,
+    }
+    public enum INDITelescopeTextType
+    {
+        DevicePort,
+        TimeUtc,
+        UploadSettings,
+        ActiveDevices,
+        Other,
+    }
     public enum INDICoordSet
     {
         SLEW = 0,
@@ -50,12 +220,108 @@ namespace INDI
     #endregion
     public class INDITelescope : INDIDevice
     {
+        public event EventHandler<INDITelescopeNumberEventArgs> IsNewNumber = null;
+        public event EventHandler<INDITelescopeSwitchEventArgs> IsNewSwitch = null;
+        public event EventHandler<INDITelescopeTextEventArgs> IsNewText = null;
         #region Constructors / Initialization
-        public INDITelescope(string name, INDIClient host)
-            : base(name, host)
+        public INDITelescope(string name, INDIClient host, bool client = true)
+            : base(name, host, client)
         {
-            Name = name;
-            Host = host;
+            if (!client)
+            {
+                AddNumberVector(new INumberVector(Name, "EQUATORIAL_COORD", "Equatorial astrometric J2000 coordinate", "Main Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("RA", "J2000 RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+                new INDINumber("DEC", "J2000 Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "EQUATORIAL_EOD_COORD", "Equatorial astrometric epoch of date coordinate", "Main Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+                new INDINumber("DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "TARGET_EOD_COORD", "Slew Target", "Main Control", "ro", "Main Control", new List<INDINumber>
+            {
+                new INDINumber("RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+                new INDINumber("DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "HORIZONTAL_COORD", "topocentric coordinate", "Main Control", "ro", "Main Control", new List<INDINumber>
+            {
+                new INDINumber("ALT", "Altitude", "%2.12f", 0.00, 90.0, 0.000000000001, 0.0),
+                new INDINumber("AZ", "Azimuth", "%3.12f", 0.00, 360.0, 0.000000000001, 0.0)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "ON_COORD_SET", "Track mode", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("SLEW", "Slew", true),
+                new INDISwitch("TRACK", "Track", false),
+                new INDISwitch("SYNC", "Sync", false)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_MOTION_NS", "Move telescope north or south", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("MOTION_NORTH", "Move North", false),
+                new INDISwitch("MOTION_SOUTH", "Move South", false)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_MOTION_WE", "Move telescope west or east", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("MOTION_WEST", "Move West", false),
+                new INDISwitch("MOTION_EAST", "Move East", false)
+            }));
+                AddNumberVector(new INumberVector(Name, "TELESCOPE_TIMED_GUIDE_NS", "Timed guide telescope north or south", "Motion Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("TIMED_GUIDE_N", "Guide North", "%5.2f", 0.00, 10000.0, 0.01, 0.0),
+                new INDINumber("TIMED_GUIDE_S", "Guide South", "%2.2f", 0.00, 10000.0, 0.01, 0.0)
+            }));
+                AddNumberVector(new INumberVector(Name, "TELESCOPE_TIMED_GUIDE_WE", "Timed guide telescope west or east", "Motion Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("TIMED_GUIDE_W", "Guide North", "%5.2f", 0.00, 10000.0, 0.01, 0.0),
+                new INDINumber("TIMED_GUIDE_E", "Guide South", "%2.2f", 0.00, 10000.0, 0.01, 0.0)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_SLEW_RATE", "Slew Rate", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("SLEW_GUIDE", "Guiding Rate", false),
+                new INDISwitch("SLEW_CENTERING", "Slow speed", false),
+                new INDISwitch("SLEW_FIND", "Medium speed", true),
+                new INDISwitch("SLEW_MAX", "Maximum speed", false),
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_PARK", "Park and unpark the telescope", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("PARK", "Park the telescope", false),
+                new INDISwitch("UNPARK", "Unpark the telescope", false)
+            }));
+                AddNumberVector(new INumberVector(Name, "TELESCOPE_PARK_POSITION", "Home park position", "Main Control", "ro", "", new List<INDINumber>
+            {
+                new INDINumber("PARK_RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+                new INDINumber("PARK_DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_PARK_OPTION", "Park Option", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("PARK_CURRENT", "Use current park position", false),
+                new INDISwitch("PARK_DEFAULT", "Use driver's default park position", true),
+                new INDISwitch("PARK_WRITE_DATA", "Write park position", false)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_ABORT_MOTION", "Abort", "Main Control", "rw", "AtMostOne", new List<INDISwitch>
+            {
+                new INDISwitch("ABORT_MOTION", "Stop telescope", false)
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_TRACK_RATE", "Track Rate", "Main Control", "rw", "AtMostOne", new List<INDISwitch>
+            {
+                new INDISwitch("TRACK_SIDEREAL", "Track at sidereal rate", true),
+                new INDISwitch("TRACK_SOLAR", "Track at solar rate", false),
+                new INDISwitch("TRACK_LUNAR", "Track at lunar rate", false),
+                new INDISwitch("TRACK_CUSTOM", "Track at custom rate", false),
+            }));
+                AddNumberVector(new INumberVector(Name, "TELESCOPE_INFO", "Telescope informtations", "Telescope Info", "ro", "Informations", new List<INDINumber>
+            {
+                new INDINumber("TELESCOPE_APERTURE", "Telescope aperture", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+                new INDINumber("TELESCOPE_FOCAL_LENGTH", "Telescope focal length", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+                new INDINumber("GUIDER_APERTURE", "Guide telescope aperture", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+                new INDINumber("GUIDER_FOCAL_LENGTH", "Guide telescope focal length", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+            }));
+                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_PIER_SIDE", "Pier Side", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
+            {
+                new INDISwitch("PIER_EAST", "Pointing West", false),
+                new INDISwitch("PIER_WEST", "Pointing East", false)
+            }));
+            }
         }
         #endregion
 
@@ -192,6 +458,60 @@ namespace INDI
             }
             catch
             {
+            }
+        }
+
+        public override void isNewNumber(Object sender, IsNewNumberEventArgs e)
+        {
+            base.isNewNumber(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewNumber?.Invoke(this, new INDITelescopeNumberEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public override void isNewSwitch(Object sender, IsNewSwitchEventArgs e)
+        {
+            base.isNewSwitch(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewSwitch?.Invoke(this, new INDITelescopeSwitchEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public override void isNewText(Object sender, IsNewTextEventArgs e)
+        {
+            base.isNewText(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewText?.Invoke(this, new INDITelescopeTextEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
         #endregion
@@ -382,7 +702,7 @@ namespace INDI
                 }
                 catch
                 {
-                    return "";
+                    throw new ArgumentException();
                 }
             }
             set
@@ -407,7 +727,7 @@ namespace INDI
                 }
                 catch
                 {
-                    return "";
+                    throw new ArgumentException();
                 }
             }
             set
@@ -432,7 +752,7 @@ namespace INDI
                 }
                 catch
                 {
-                    return "";
+                    throw new ArgumentException();
                 }
             }
             set
@@ -457,7 +777,7 @@ namespace INDI
                 }
                 catch
                 {
-                    return "";
+                    throw new ArgumentException();
                 }
             }
             set

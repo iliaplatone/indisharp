@@ -17,6 +17,8 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Threading;
+using System.Globalization;
 
 namespace INDI.Forms
 {
@@ -27,7 +29,7 @@ namespace INDI.Forms
         TextBox Address = new TextBox();
         ComboBox Device = new ComboBox();
         public string deviceSelected = "";
-        public INDIChooser()
+        public INDIChooser(string address = "127.0.0.1", int port = 7624)
         {
             Int32 y = 15;
             Label l = new Label();
@@ -37,7 +39,7 @@ namespace INDI.Forms
             y += 33;
             Address.BorderStyle = BorderStyle.FixedSingle;
             Address.Name = "address";
-            Address.Text = "127.0.0.1:7624";
+            Address.Text = address + ":" + port.ToString();
             Address.Location = new Point(5, y);
             Address.Size = new Size(190, 23);
             y += 33;
@@ -135,6 +137,8 @@ namespace INDI.Forms
         INDIClient server;
         public INDIForm(INDIClient host, string device = "")
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             this.FormClosing += _FormClosing;
             server = host;
             Device = device;
@@ -189,8 +193,9 @@ namespace INDI.Forms
 
         Control GetChild(Control c, string name)
         {
-            if (c.Controls.Find(name, false).Length > 0)
-                return c.Controls.Find(name, false)[0];
+            foreach (Control ctl in c.Controls)
+                if (ctl.Name == name)
+                    return ctl;
             return null;
         }
 
@@ -208,9 +213,9 @@ namespace INDI.Forms
                 TabPage dev = new TabPage();
                 dev.Name = device;
                 dev.Text = device;
-                dev.Size = new Size(490, 367);
+                dev.Size = new Size(505, 367);
                 TabControl tab = new TabControl();
-                tab.Size = new Size(485, 362);
+                tab.Size = new Size(495, 362);
                 tab.Name = device + "_Groups";
                 dev.Controls.Add(tab);
                 if (!ChildPresent(DevicesConnected, device))
@@ -222,257 +227,342 @@ namespace INDI.Forms
         {
             if (device == Device || device == string.Empty)
             {
-                TabControl tab = (TabControl)DevicesConnected.Controls.Find(device, false)[0].Controls.Find(device + "_Groups", false)[0];
-                TabPage grp = new TabPage();
-                grp.Size = new Size(480, 334);
-                grp.Name = name;
-                grp.Text = name;
-                Panel pan = new Panel();
-                pan.Size = new Size(480, 334);
-                pan.AutoScroll = true;
-                pan.Name = name + "_AutoScrollPanel";
-                grp.Controls.Add(pan);
-                if (!ChildPresent(tab, name))
-                    tab.Controls.Add(grp);
+                try
+                {
+                    if (IsHandleCreated)
+                    {
+                        Control tab = GetChild(DevicesConnected, device);
+                        if (tab != null)
+                        {
+                            tab = GetChild(tab, device + "_Groups");
+                            if (tab != null)
+                            {
+                                TabPage grp = new TabPage();
+                                grp.Size = new Size(485, 334);
+                                grp.Name = name;
+                                grp.Text = name;
+                                grp.AutoScroll = true;
+                                Panel pan = new Panel();
+                                pan.Size = new Size(470, 334);
+                                pan.Name = name + "_AutoScrollPanel";
+                                pan.ControlAdded += pan_ControlAdded;
+                                grp.Controls.Add(pan);
+                                if (!ChildPresent(tab, name))
+                                    tab.Controls.Add(grp);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace);
+                }
             }
+        }
+
+        void pan_ControlAdded(object sender, ControlEventArgs e)
+        {
+            this.Invoke((MethodInvoker)delegate
+            {
+                Panel pan = (Panel)sender;
+                int height = 0;
+                foreach (Control c in pan.Controls)
+                    if (c.Bottom > height)
+                        height = c.Bottom;
+                pan.Size = new Size(pan.Width, height + 5);
+            });
         }
 
         void IsNewSwitch(Object sender, IsNewSwitchEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if ((e.Device == Device || e.Device == string.Empty) && e.Vector.Name != String.Empty && e.Vector.Group != String.Empty)
             {
-                if (IsHandleCreated)
+                try
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    if (IsHandleCreated)
                     {
-                        GroupBox vector = new GroupBox();
-                        vector.FlatStyle = FlatStyle.Flat;
-                        AddDevice(e.Device);
-                        AddGroup(e.Vector.Group, e.Device);
-                        Control ctl = DevicesConnected.Controls.Find(e.Device, false)[0];
-                        ctl = ctl.Controls.Find(e.Device + "_Groups", false)[0];
-                        ctl = ctl.Controls.Find(e.Vector.Group, false)[0];
-                        ctl = ctl.Controls.Find(e.Vector.Group + "_AutoScrollPanel", false)[0];
-                        Panel pan = (Panel)ctl;
-                        if (!ChildPresent(pan, e.Vector.Name))
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            if (GetLastChild(pan) != null)
-                                vector.Location = new Point(GetLastChild(pan).Location.X, GetLastChild(pan).Location.Y + GetLastChild(pan).Size.Height + 5);
-                            pan.Controls.Add(vector);
-                            vector.Name = e.Vector.Name;
-                            vector.Text = e.Vector.Label;
-                        }
-                        vector = (GroupBox)ctl.Controls.Find(e.Vector.Name, false)[0];
-                        if (vector.Controls.Count >= e.Vector.Values.Count)
-                            goto setSwitches;
-                        Int32 y = 20;
-                        vector.Size = new Size(455, 20 + e.Vector.Values.Count * 28);
-                        for (int k = 1; k < vector.Parent.Controls.Count; k++)
-                            vector.Parent.Controls[k].Location = new Point(vector.Parent.Controls[k].Location.X, vector.Parent.Controls[k - 1].Location.Y + vector.Parent.Controls[k - 1].Size.Height + 5);
-                        foreach (INDISwitch n in e.Vector.Values)
-                        {
-                            if (e.Vector.Rule != "OneOfMany" && e.Vector.Rule != "AtMostOne")
+                            GroupBox vector = new GroupBox();
+                            vector.FlatStyle = FlatStyle.Flat;
+                            AddDevice(e.Device);
+                            AddGroup(e.Vector.Group, e.Device);
+                            Control ctl = GetChild(DevicesConnected, e.Device);
+                            if (ctl != null)
                             {
-                                var t = new CheckBox();
-                                t.FlatStyle = FlatStyle.Flat;
-                                t.AutoSize = true;
-                                t.Text = n.Label;
-                                t.Name = "SWITCH_" + n.Name;
-                                t.Enabled = (e.Vector.Permission != "ro");
-                                t.Checked = n.value;
-                                t.Location = new Point(30, y);
-                                t.CheckedChanged += valueChanged;
-                                y += 26;
-                                vector.Controls.Add(t);
+                                ctl = GetChild(ctl, e.Device + "_Groups");
+                                if (ctl != null)
+                                {
+                                    ctl = GetChild(ctl, e.Vector.Group);
+                                    ctl = GetChild(ctl, e.Vector.Group + "_AutoScrollPanel");
+                                    Panel pan = (Panel)ctl;
+                                    if (!ChildPresent(pan, e.Vector.Name))
+                                    {
+                                        if (GetLastChild(pan) != null)
+                                            vector.Location = new Point(GetLastChild(pan).Location.X, GetLastChild(pan).Location.Y + GetLastChild(pan).Size.Height + 5);
+                                        pan.Controls.Add(vector);
+                                        vector.Name = e.Vector.Name;
+                                        vector.Text = e.Vector.Label;
+                                    }
+                                    vector = (GroupBox)ctl.Controls.Find(e.Vector.Name, false)[0];
+                                    if (vector.Controls.Count >= e.Vector.Values.Count)
+                                        goto setSwitches;
+                                    Int32 y = 20;
+                                    vector.Size = new Size(455, 20 + e.Vector.Values.Count * 28);
+                                    for (int k = 1; k < vector.Parent.Controls.Count; k++)
+                                        vector.Parent.Controls[k].Location = new Point(vector.Parent.Controls[k].Location.X, vector.Parent.Controls[k - 1].Location.Y + vector.Parent.Controls[k - 1].Size.Height + 5);
+                                    foreach (INDISwitch n in e.Vector.Values)
+                                    {
+                                        if (e.Vector.Rule != "OneOfMany" && e.Vector.Rule != "AtMostOne")
+                                        {
+                                            var t = new CheckBox();
+                                            t.FlatStyle = FlatStyle.Flat;
+                                            t.AutoSize = true;
+                                            t.Text = n.Label;
+                                            t.Name = "SWITCH_" + n.Name;
+                                            t.Enabled = (e.Vector.Permission != "ro");
+                                            t.Checked = n.value;
+                                            t.Location = new Point(30, y);
+                                            t.CheckedChanged += valueChanged;
+                                            y += 26;
+                                            vector.Controls.Add(t);
+                                        }
+                                        else
+                                        {
+                                            var t = new RadioButton();
+                                            t.FlatStyle = FlatStyle.Flat;
+                                            t.AutoSize = true;
+                                            t.Text = n.Label;
+                                            t.Name = "SELECT_" + n.Name;
+                                            t.Enabled = (e.Vector.Permission != "ro");
+                                            t.Checked = n.value;
+                                            t.Location = new Point(30, y);
+                                            t.CheckedChanged += valueChanged;
+                                            y += 26;
+                                            vector.Controls.Add(t);
+                                        }
+                                    }
+                                    setSwitches:
+                                    foreach (INDISwitch n in e.Vector.Values)
+                                    {
+                                        if (ChildPresent(vector, "SWITCH_" + n.Name))
+                                        {
+                                            ((CheckBox)vector.Controls.Find("SWITCH_" + n.Name, false)[0]).CheckedChanged -= valueChanged;
+                                            ((CheckBox)vector.Controls.Find("SWITCH_" + n.Name, false)[0]).Checked = n.value;
+                                            ((CheckBox)vector.Controls.Find("SWITCH_" + n.Name, false)[0]).CheckedChanged += valueChanged;
+                                        }
+                                        if (ChildPresent(vector, "SELECT_" + n.Name))
+                                        {
+                                            ((RadioButton)vector.Controls.Find("SELECT_" + n.Name, false)[0]).CheckedChanged -= valueChanged;
+                                            ((RadioButton)vector.Controls.Find("SELECT_" + n.Name, false)[0]).Checked = n.value;
+                                            ((RadioButton)vector.Controls.Find("SELECT_" + n.Name, false)[0]).CheckedChanged += valueChanged;
+                                        }
+                                    }
+                                }
                             }
-                            else
-                            {
-                                var t = new RadioButton();
-                                t.FlatStyle = FlatStyle.Flat;
-                                t.AutoSize = true;
-                                t.Text = n.Label;
-                                t.Name = "SELECT_" + n.Name;
-                                t.Enabled = (e.Vector.Permission != "ro");
-                                t.Checked = n.value;
-                                t.Location = new Point(30, y);
-                                t.CheckedChanged += valueChanged;
-                                y += 26;
-                                vector.Controls.Add(t);
-                            }
-                        }
-                        setSwitches:
-                        foreach (INDISwitch n in e.Vector.Values)
-                        {
-                            if (ChildPresent(vector, "SWITCH_" + n.Name))
-                            {
-                                ((CheckBox)vector.Controls.Find("SWITCH_" + n.Name, false)[0]).CheckedChanged -= valueChanged;
-                                ((CheckBox)vector.Controls.Find("SWITCH_" + n.Name, false)[0]).Checked = n.value;
-                                ((CheckBox)vector.Controls.Find("SWITCH_" + n.Name, false)[0]).CheckedChanged += valueChanged;
-                            }
-                            if (ChildPresent(vector, "SELECT_" + n.Name))
-                            {
-                                ((RadioButton)vector.Controls.Find("SELECT_" + n.Name, false)[0]).CheckedChanged -= valueChanged;
-                                ((RadioButton)vector.Controls.Find("SELECT_" + n.Name, false)[0]).Checked = n.value;
-                                ((RadioButton)vector.Controls.Find("SELECT_" + n.Name, false)[0]).CheckedChanged += valueChanged;
-                            }
-                        }
-                    });
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
             }
         }
 
         void IsNewNumber(Object sender, IsNewNumberEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if ((e.Device == Device || e.Device == string.Empty) && e.Vector.Name != String.Empty && e.Vector.Group != String.Empty)
             {
-                if (IsHandleCreated)
+                try
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    if (IsHandleCreated)
                     {
-                        GroupBox vector = new GroupBox();
-                        vector.FlatStyle = FlatStyle.Flat;
-                        AddDevice(e.Device);
-                        AddGroup(e.Vector.Group, e.Device);
-                        Control ctl = DevicesConnected.Controls.Find(e.Device, false)[0];
-                        ctl = ctl.Controls.Find(e.Device + "_Groups", false)[0];
-                        ctl = ctl.Controls.Find(e.Vector.Group, false)[0];
-                        ctl = ctl.Controls.Find(e.Vector.Group + "_AutoScrollPanel", false)[0];
-                        Panel pan = (Panel)ctl;
-                        if (!ChildPresent(pan, e.Vector.Name))
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            if (GetLastChild(pan) != null)
-                                vector.Location = new Point(GetLastChild(pan).Location.X, GetLastChild(pan).Location.Y + GetLastChild(pan).Size.Height + 5);
-                            pan.Controls.Add(vector);
-                            vector.Name = e.Vector.Name;
-                            vector.Text = e.Vector.Label;
-                        }
-                        vector = (GroupBox)ctl.Controls.Find(e.Vector.Name, false)[0];
-                        if (vector.Controls.Count >= e.Vector.Values.Count)
-                            goto setNumbers;
-                        Int32 y = 20;
-                        vector.Size = new Size(455, 20 + e.Vector.Values.Count * 28);
-                        for (int k = 1; k < vector.Parent.Controls.Count; k++)
-                            vector.Parent.Controls[k].Location = new Point(vector.Parent.Controls[k].Location.X, vector.Parent.Controls[k - 1].Location.Y + vector.Parent.Controls[k - 1].Size.Height + 5);
-                        foreach (INDINumber n in e.Vector.Values)
-                        {
-                            Label l = new Label();
-                            l.AutoSize = true;
-                            l.Text = n.Label;
-                            TextBox t = new TextBox();
-                            t.BorderStyle = BorderStyle.FixedSingle;
-                            t.Text = n.value.ToString();
-                            t.Name = "NUMBER_" + n.Name;
-                            t.Enabled = (e.Vector.Permission != "ro");
-                            l.Location = new Point(30, y);
-                            t.Location = new Point(330, y - 5);
-                            l.Size = new Size(100, 18);
-                            t.Size = new Size(100, 18);
-                            t.TextChanged += valueChanged;
-                            y += 26;
-                            vector.Controls.Add(l);
-                            vector.Controls.Add(t);
-                        }
-                        setNumbers:
-                        foreach (INDINumber n in e.Vector.Values)
-                        {
-                            vector.Controls.Find("NUMBER_" + n.Name, false)[0].TextChanged -= valueChanged;
-                            string text = n.value.ToString();
-                            if (e.Vector.Name == "TIME_LST" || (e.Vector.Name.Contains("COORD") && n.Name == "RA"))
-                                text = (Math.Floor(n.value) % 24).ToString() + ":" + (Math.Floor(n.value * 60) % 60).ToString() + ":" + (Math.Floor(n.value * 3600) % 60).ToString();
-                            if (e.Vector.Name.Contains("COORD") && (n.Name == "DEC" || n.Name == "ALT" || n.Name == "AZ"))
-                                text = (Math.Floor(n.value) % 360).ToString() + ":" + (Math.Abs(Math.Floor(n.value * 60)) % 60).ToString() + ":" + (Math.Abs(Math.Floor(n.value * 3600)) % 60).ToString();
-                            vector.Controls.Find("NUMBER_" + n.Name, false)[0].Text = text;
-                            vector.Controls.Find("NUMBER_" + n.Name, false)[0].TextChanged += valueChanged;
-                        }
-                    });
+                            GroupBox vector = new GroupBox();
+                            vector.FlatStyle = FlatStyle.Flat;
+                            AddDevice(e.Device);
+                            AddGroup(e.Vector.Group, e.Device);
+                            Control ctl = GetChild(DevicesConnected, e.Device);
+                            if (ctl != null)
+                            {
+                                ctl = GetChild(ctl, e.Device + "_Groups");
+                                if (ctl != null)
+                                {
+                                    ctl = GetChild(ctl, e.Vector.Group);
+                                    ctl = GetChild(ctl, e.Vector.Group + "_AutoScrollPanel");
+                                    Panel pan = (Panel)ctl;
+                                    if (!ChildPresent(pan, e.Vector.Name))
+                                    {
+                                        if (GetLastChild(pan) != null)
+                                            vector.Location = new Point(GetLastChild(pan).Location.X, GetLastChild(pan).Location.Y + GetLastChild(pan).Size.Height + 5);
+                                        pan.Controls.Add(vector);
+                                        vector.Name = e.Vector.Name;
+                                        vector.Text = e.Vector.Label;
+                                    }
+                                    vector = (GroupBox)ctl.Controls.Find(e.Vector.Name, false)[0];
+                                    if (vector.Controls.Count >= e.Vector.Values.Count)
+                                        goto setNumbers;
+                                    Int32 y = 20;
+                                    vector.Size = new Size(455, 20 + e.Vector.Values.Count * 28);
+                                    for (int k = 1; k < vector.Parent.Controls.Count; k++)
+                                        vector.Parent.Controls[k].Location = new Point(vector.Parent.Controls[k].Location.X, vector.Parent.Controls[k - 1].Location.Y + vector.Parent.Controls[k - 1].Size.Height + 5);
+                                    foreach (INDINumber n in e.Vector.Values)
+                                    {
+                                        Label l = new Label();
+                                        l.AutoSize = true;
+                                        l.Text = n.Label;
+                                        TextBox t = new TextBox();
+                                        t.BorderStyle = BorderStyle.FixedSingle;
+                                        t.Text = n.value.ToString();
+                                        t.Name = "NUMBER_" + n.Name;
+                                        t.Enabled = (e.Vector.Permission != "ro");
+                                        l.Location = new Point(30, y);
+                                        t.Location = new Point(330, y - 5);
+                                        l.Size = new Size(100, 18);
+                                        t.Size = new Size(100, 18);
+                                        t.TextChanged += valueChanged;
+                                        y += 26;
+                                        vector.Controls.Add(l);
+                                        vector.Controls.Add(t);
+                                    }
+                                    setNumbers:
+                                    foreach (INDINumber n in e.Vector.Values)
+                                    {
+                                        vector.Controls.Find("NUMBER_" + n.Name, false)[0].TextChanged -= valueChanged;
+                                        string text = n.value.ToString();
+                                        if (e.Vector.Name == "TIME_LST" || (e.Vector.Name.Contains("COORD") && n.Name == "RA"))
+                                            text = (Math.Floor(n.value) % 24).ToString() + ":" + (Math.Floor(n.value * 60) % 60).ToString() + ":" + (Math.Floor(n.value * 3600) % 60).ToString();
+                                        if (e.Vector.Name.Contains("COORD") && (n.Name == "DEC" || n.Name == "ALT" || n.Name == "AZ"))
+                                            text = (Math.Floor(n.value) % 360).ToString() + ":" + (Math.Abs(Math.Floor(n.value * 60)) % 60).ToString() + ":" + (Math.Abs(Math.Floor(n.value * 3600)) % 60).ToString();
+                                        vector.Controls.Find("NUMBER_" + n.Name, false)[0].Text = text;
+                                        vector.Controls.Find("NUMBER_" + n.Name, false)[0].TextChanged += valueChanged;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
             }
         }
 
         void IsNewText(Object sender, IsNewTextEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if ((e.Device == Device || e.Device == string.Empty) && e.Vector.Name != String.Empty && e.Vector.Group != String.Empty)
             {
-                if (IsHandleCreated)
+                try
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    if (IsHandleCreated)
                     {
-                        GroupBox vector = new GroupBox();
-                        vector.FlatStyle = FlatStyle.Flat;
-                        AddDevice(e.Device);
-                        AddGroup(e.Vector.Group, e.Device);
-                        Control ctl = DevicesConnected.Controls.Find(e.Device, false)[0];
-                        ctl = ctl.Controls.Find(e.Device + "_Groups", false)[0];
-                        ctl = ctl.Controls.Find(e.Vector.Group, false)[0];
-                        ctl = ctl.Controls.Find(e.Vector.Group + "_AutoScrollPanel", false)[0];
-                        Panel pan = (Panel)ctl;
-                        if (!ChildPresent(pan, e.Vector.Name))
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            if (GetLastChild(pan) != null)
-                                vector.Location = new Point(GetLastChild(pan).Location.X, GetLastChild(pan).Location.Y + GetLastChild(pan).Size.Height + 5);
-                            pan.Controls.Add(vector);
-                            vector.Name = e.Vector.Name;
-                            vector.Text = e.Vector.Label;
-                        }
-                        vector = (GroupBox)ctl.Controls.Find(e.Vector.Name, false)[0];
-                        if (vector.Controls.Count >= e.Vector.Values.Count)
-                            goto setTexts;
-                        Int32 y = 20;
-                        vector.Size = new Size(455, 20 + e.Vector.Values.Count * 28);
-                        for (int k = 1; k < vector.Parent.Controls.Count; k++)
-                            vector.Parent.Controls[k].Location = new Point(vector.Parent.Controls[k].Location.X, vector.Parent.Controls[k - 1].Location.Y + vector.Parent.Controls[k - 1].Size.Height + 5);
-                        foreach (INDIText n in e.Vector.Values)
-                        {
-                            Label l = new Label();
-                            l.AutoSize = true;
-                            l.Text = n.Label;
-                            TextBox t = new TextBox();
-                            t.BorderStyle = BorderStyle.FixedSingle;
-                            t.Text = n.value;
-                            t.Name = "TEXT_" + n.Name;
-                            t.Enabled = (e.Vector.Permission != "ro");
-                            l.Location = new Point(30, y);
-                            t.Location = new Point(330, y - 5);
-                            t.TextChanged += valueChanged;
-                            y += 26;
-                            vector.Controls.Add(l);
-                            vector.Controls.Add(t);
-                        }
-                        setTexts:
-                        foreach (INDIText n in e.Vector.Values)
-                        {
-                            vector.Controls.Find("TEXT_" + n.Name, false)[0].TextChanged -= valueChanged;
-                            vector.Controls.Find("TEXT_" + n.Name, false)[0].Text = n.value;
-                            vector.Controls.Find("TEXT_" + n.Name, false)[0].TextChanged += valueChanged;
-                        }
-                    });
+                            GroupBox vector = new GroupBox();
+                            vector.FlatStyle = FlatStyle.Flat;
+                            AddDevice(e.Device);
+                            AddGroup(e.Vector.Group, e.Device);
+                            Control ctl = GetChild(DevicesConnected, e.Device);
+                            if (ctl != null)
+                            {
+                                ctl = GetChild(ctl, e.Device + "_Groups");
+                                if (ctl != null)
+                                {
+                                    ctl = GetChild(ctl, e.Vector.Group);
+                                    ctl = GetChild(ctl, e.Vector.Group + "_AutoScrollPanel");
+                                    Panel pan = (Panel)ctl;
+                                    if (!ChildPresent(pan, e.Vector.Name))
+                                    {
+                                        if (GetLastChild(pan) != null)
+                                            vector.Location = new Point(GetLastChild(pan).Location.X, GetLastChild(pan).Location.Y + GetLastChild(pan).Size.Height + 5);
+                                        pan.Controls.Add(vector);
+                                        vector.Name = e.Vector.Name;
+                                        vector.Text = e.Vector.Label;
+                                    }
+                                    vector = (GroupBox)ctl.Controls.Find(e.Vector.Name, false)[0];
+                                    if (vector.Controls.Count >= e.Vector.Values.Count)
+                                        goto setTexts;
+                                    Int32 y = 20;
+                                    vector.Size = new Size(455, 20 + e.Vector.Values.Count * 28);
+                                    for (int k = 1; k < vector.Parent.Controls.Count; k++)
+                                        vector.Parent.Controls[k].Location = new Point(vector.Parent.Controls[k].Location.X, vector.Parent.Controls[k - 1].Location.Y + vector.Parent.Controls[k - 1].Size.Height + 5);
+                                    foreach (INDIText n in e.Vector.Values)
+                                    {
+                                        Label l = new Label();
+                                        l.AutoSize = true;
+                                        l.Text = n.Label;
+                                        TextBox t = new TextBox();
+                                        t.BorderStyle = BorderStyle.FixedSingle;
+                                        t.Text = n.value;
+                                        t.Name = "TEXT_" + n.Name;
+                                        t.Enabled = (e.Vector.Permission != "ro");
+                                        l.Location = new Point(30, y);
+                                        t.Location = new Point(330, y - 5);
+                                        t.TextChanged += valueChanged;
+                                        y += 26;
+                                        vector.Controls.Add(l);
+                                        vector.Controls.Add(t);
+                                    }
+                                    setTexts:
+                                    foreach (INDIText n in e.Vector.Values)
+                                    {
+                                        vector.Controls.Find("TEXT_" + n.Name, false)[0].TextChanged -= valueChanged;
+                                        vector.Controls.Find("TEXT_" + n.Name, false)[0].Text = n.value;
+                                        vector.Controls.Find("TEXT_" + n.Name, false)[0].TextChanged += valueChanged;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
             }
         }
 
         void IsDelProperty(Object sender, IsDelPropertyEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             if (e.Device == Device || e.Device == string.Empty)
             {
-                if (IsHandleCreated)
+                try
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    if (IsHandleCreated)
                     {
-                        Control device, property, group, tab;
-                        if (ChildPresent(DevicesConnected, e.Device))
+                        this.Invoke((MethodInvoker)delegate
                         {
-                            device = DevicesConnected.Controls.Find(e.Device, false)[0];
-                            if (device.Controls.Find(e.Vector, true).Length > 0)
+                            Control device, property, group, tab;
+                            if (ChildPresent(DevicesConnected, e.Device))
                             {
-                                property = device.Controls.Find(e.Vector, true)[0];
-                                group = property.Parent;
-                                tab = group.Parent.Parent;
-                                group.Controls.Remove(property);
-                                if (group.Controls.Count == 0)
-                                    tab.Controls.Remove(group.Parent);
+                                device = DevicesConnected.Controls.Find(e.Device, false)[0];
+                                if (device.Controls.Find(e.Vector, true).Length > 0)
+                                {
+                                    property = device.Controls.Find(e.Vector, true)[0];
+                                    group = property.Parent;
+                                    tab = group.Parent.Parent;
+                                    group.Controls.Remove(property);
+                                    if (group.Controls.Count == 0)
+                                        tab.Controls.Remove(group.Parent);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace);
                 }
             }
         }

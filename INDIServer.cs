@@ -21,6 +21,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace INDI
 {
@@ -54,10 +55,14 @@ namespace INDI
 
         public INDIServer(string address = "127.0.0.1:7624")
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Address = address;
         }
         public INDIServer(string[] clients, string address = "localhost:7624")
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Address = address;
             foreach (string s in clients)
             {
@@ -68,6 +73,8 @@ namespace INDI
 
         public INDIServer(List<INDIClient> clients, string address = "127.0.0.1:7624")
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Address = address;
             foreach (INDIClient c in clients)
             {
@@ -182,6 +189,8 @@ namespace INDI
 
         private void _writeThread(Object client)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             byte[] m = new byte[1];
             string message = "";
             TcpClient c = (TcpClient)client;
@@ -208,6 +217,8 @@ namespace INDI
         }
         private void _readThread(Object client)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             string message = "";
             TcpClient c = (TcpClient)client;
             NetworkStream s = c.GetStream();

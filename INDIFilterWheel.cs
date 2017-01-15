@@ -15,20 +15,200 @@
 */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 
 namespace INDI
 {
-	public class INDIFilterWheel : INDIDevice
+    #region Custom Event Argument classes
+    public class INDIFilterWheelNumberEventArgs : IsNewNumberEventArgs
     {
-        #region Constructors / Initialization
-        public INDIFilterWheel(string name, INDIClient host)
-            : base(name, host)
+        public INDIFilterWheelNumberType Type;
+        public List<INDINumber> Values;
+        public INDIFilterWheelNumberEventArgs(INumberVector vector, string dev) : base(vector, dev)
         {
-            Name = name;
-            Host = host;
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "FILTER_SLOT":
+                    Type = INDIFilterWheelNumberType.Slot;
+                    break;
+
+                case "TIME_LST":
+                    Type = INDIFilterWheelNumberType.TimeLst;
+                    break;
+                case "GEOGRAPHIC_COORD":
+                    Type = INDIFilterWheelNumberType.GeographicCoord;
+                    break;
+                case "ATMOSPHERE":
+                    Type = INDIFilterWheelNumberType.Atmosphere;
+                    break;
+                default:
+                    Type = INDIFilterWheelNumberType.Other;
+                    break;
+            }
+        }
+    }
+    public class INDIFilterWheelSwitchEventArgs : IsNewSwitchEventArgs
+    {
+        public INDIFilterWheelSwitchType Type;
+        public List<INDISwitch> Values;
+        public INDIFilterWheelSwitchEventArgs(ISwitchVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+
+                case "CONNECTION":
+                    Type = INDIFilterWheelSwitchType.Connection;
+                    break;
+                case "UPLOAD_MODE":
+                    Type = INDIFilterWheelSwitchType.UploadMode;
+                    break;
+                default:
+                    Type = INDIFilterWheelSwitchType.Other;
+                    break;
+            }
+        }
+    }
+    public class INDIFilterWheelTextEventArgs : IsNewTextEventArgs
+    {
+        public INDIFilterWheelTextType Type;
+        public List<INDIText> Values;
+        public INDIFilterWheelTextEventArgs(ITextVector vector, string dev) : base(vector, dev)
+        {
+            Values = vector.Values;
+            switch (vector.Name)
+            {
+                case "FILTER_NAME":
+                    Type = INDIFilterWheelTextType.Name;
+                    break;
+
+                case "DEVICE_PORT":
+                    Type = INDIFilterWheelTextType.DevicePort;
+                    break;
+                case "TIME_UTC":
+                    Type = INDIFilterWheelTextType.TimeUtc;
+                    break;
+                case "UPLOAD_SETTINGS":
+                    Type = INDIFilterWheelTextType.UploadSettings;
+                    break;
+                case "ACTIVE_DEVICES":
+                    Type = INDIFilterWheelTextType.ActiveDevices;
+                    break;
+                default:
+                    Type = INDIFilterWheelTextType.Other;
+                    break;
+            }
+        }
+    }
+    #endregion
+    #region Enums
+    public enum INDIFilterWheelNumberType
+    {
+        TimeLst,
+        GeographicCoord,
+        Atmosphere,
+        Other,
+
+        Slot,
+    }
+    public enum INDIFilterWheelSwitchType
+    {
+        Connection,
+        UploadMode,
+        Other,
+    }
+    public enum INDIFilterWheelTextType
+    {
+        DevicePort,
+        TimeUtc,
+        UploadSettings,
+        ActiveDevices,
+        Other,
+
+        Name,
+    }
+    #endregion
+    public class INDIFilterWheel : INDIDevice
+    {
+        public event EventHandler<INDIFilterWheelNumberEventArgs> IsNewNumber = null;
+        public event EventHandler<INDIFilterWheelSwitchEventArgs> IsNewSwitch = null;
+        public event EventHandler<INDIFilterWheelTextEventArgs> IsNewText = null;
+        #region Constructors / Initialization
+        public INDIFilterWheel(string name, INDIClient host, bool client = true)
+            : base(name, host, client)
+        {
+            if (!client)
+            {
+                AddNumberVector(new INumberVector(Name, "FILTER_SLOT", "The filter wheel's current slot number", "Main Control", "rw", "", new List<INDINumber>
+            {
+                new INDINumber("FILTER_SLOT_VALUE", "Slot number", "%2.0f", 0.00, 99.0, 1.0, 0.0)
+            }));
+                AddTextVector(new ITextVector(Name, "FILTER_NAME_VALUE", "The filter wheel's current slot name", "Main Control", "ro", "", new List<INDIText>
+            {
+                new INDIText("FILTER_NAME", "Slot name", "LIGHT")
+            }));
+            }
         }
         #endregion
 
+        #region Standard Methods
+        public override void isNewNumber(Object sender, IsNewNumberEventArgs e)
+        {
+            base.isNewNumber(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewNumber?.Invoke(this, new INDIFilterWheelNumberEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public override void isNewSwitch(Object sender, IsNewSwitchEventArgs e)
+        {
+            base.isNewSwitch(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewSwitch?.Invoke(this, new INDIFilterWheelSwitchEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public override void isNewText(Object sender, IsNewTextEventArgs e)
+        {
+            base.isNewText(sender, e);
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            try
+            {
+                if (e.Vector.Device == Name)
+                {
+                    IsNewText?.Invoke(this, new INDIFilterWheelTextEventArgs(e.Vector, e.Device));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        #endregion
         #region Standard Properties
         public Int32 FilterSlot
         {
@@ -68,7 +248,7 @@ namespace INDI
                 }
                 catch
                 {
-                    return "";
+                    throw new ArgumentException();
                 }
             }
             set

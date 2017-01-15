@@ -210,6 +210,8 @@ namespace INDI
 
         public INDIClient(string uri)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Uri u = new Uri("http://" + uri);
             Port = u.Port;
             if (!uri.Contains(":"))
@@ -219,12 +221,16 @@ namespace INDI
 
         public INDIClient(string address, int port)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Address = address;
             Port = port;
         }
 
         public INDIClient(Stream s)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Address = String.Empty;
             Port = 0;
             stream = s;
@@ -232,6 +238,8 @@ namespace INDI
 
         public INDIClient()
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             Address = String.Empty;
             Port = 0;
             stream = null;
@@ -277,10 +285,7 @@ namespace INDI
         public void Dispose()
         {
             Disconnect();
-            foreach (INDIDevice dev in Devices)
-                dev.Dispose();
             Devices.Clear();
-            GC.Collect();
         }
 
         public void Disconnect()
@@ -298,6 +303,8 @@ namespace INDI
         #region Threads
         void _sendThread()
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             while (ThreadsRunning)
             {
                 try
@@ -305,18 +312,17 @@ namespace INDI
                     if (outputString.Count > 0 && Connected)
                     {
                         string message = OutputString;
-                        Encoding enc = Encoding.UTF8;
-                        byte[] buffer = enc.GetBytes(message);
-                        stream.Write(buffer, 0, buffer.Length);
-                        if (MessageSent != null)
+                        if (!String.IsNullOrEmpty(message))
                         {
-                            MessageSent(this, new MessageSentEventArgs(message));
+                            byte[] buffer = Encoding.UTF8.GetBytes(message);
+                            stream.Write(buffer, 0, buffer.Length);
+                            MessageSent?.Invoke(this, new MessageSentEventArgs(message));
                         }
                     }
                 }
                 catch
                 {
-                    break;
+                    continue;
                 }
                 Thread.Sleep(100);
             }
@@ -324,6 +330,8 @@ namespace INDI
 
 	    void _readThread(object s = null)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             string action = "";
             string target = "";
             string device = "";
@@ -397,7 +405,7 @@ namespace INDI
                                     rule = rule == null ? "" : rule;
                                     if (device == String.Empty || vectorname == String.Empty)
                                         break;
-                                    AddDevice(device);
+                                    AddDevice(new INDIDevice(device, this));
                                     if (target.Contains("blob"))
                                     {
                                         blobs = new List<INDIBlob>();
@@ -470,7 +478,7 @@ namespace INDI
                                     }
                                     if (target.Contains("number"))
                                     {
-                                        numbers.Add(new INDINumber(name, label, format, Double.Parse(minimum, NumberStyles.Any, CultureInfo.InvariantCulture), Double.Parse(maximum, NumberStyles.Any, CultureInfo.InvariantCulture), Double.Parse(step, NumberStyles.Any, CultureInfo.InvariantCulture), Double.Parse(reader.Value.Replace("\n", ""), NumberStyles.Any, CultureInfo.InvariantCulture)));
+                                        numbers.Add(new INDINumber(name, label, format, Double.Parse(minimum), Double.Parse(maximum), Double.Parse(step), Double.Parse(reader.Value.Replace("\n", ""))));
                                     }
                                     if (target.Contains("text"))
                                     {
@@ -520,7 +528,7 @@ namespace INDI
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace);
-                        break;
+                        continue;
                     }
                 }
                 reader.Close();
@@ -532,13 +540,13 @@ namespace INDI
         }
         #endregion
         #region Device releated methods
-        public void AddDevice(string dev)
+        public void AddDevice(INDIDevice dev)
         {
-            if (GetDevice(dev) == null && dev != null && dev != String.Empty)
+            if (GetDevice(dev.Name) == null && dev != null && dev.Name != String.Empty)
             {
-                Devices.Add(new INDIDevice(dev, this));
+                Devices.Add(dev);
                 if (DeviceAdded != null)
-                    DeviceAdded(this, new DeviceAddedEventArgs(GetDevice(dev)));
+                    DeviceAdded(this, new DeviceAddedEventArgs(GetDevice(dev.Name)));
             }
         }
 
