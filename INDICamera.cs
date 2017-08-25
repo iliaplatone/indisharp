@@ -194,8 +194,8 @@ namespace INDI
     };
     #endregion
     public class INDICamera : INDIDevice
-    {
-        public event EventHandler<INDICameraBlobEventArgs> IsNewBlob = null;
+	{
+		public event EventHandler<INDICameraBlobEventArgs> IsNewBlob = null;
         public event EventHandler<INDICameraNumberEventArgs> IsNewNumber = null;
         public event EventHandler<INDICameraSwitchEventArgs> IsNewSwitch = null;
         public event EventHandler<INDICameraTextEventArgs> IsNewText = null;

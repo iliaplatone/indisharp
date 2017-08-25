@@ -209,7 +209,22 @@ namespace INDI
             }
         }
         #endregion
-        #region Standard Properties
+		#region Standard Properties
+		public Int32 FilterSlots
+		{
+			get
+			{
+				try
+				{
+					return (Int32)GetNumber("FILTER_SLOT", "FILTER_SLOT_VALUE").max;
+				}
+				catch
+				{
+					return 0;
+				}
+			}
+		}
+
         public Int32 FilterSlot
         {
             get
@@ -236,32 +251,66 @@ namespace INDI
                 {
                 }
             }
-        }
+		}
 
-        public string FilterName
-        {
-            get
-            {
-                try
-                {
-                    return GetText("FILTER_NAME", "FILTER_NAME_VALUE").value;
-                }
-                catch
-                {
-                    throw new ArgumentException();
-                }
-            }
-            set
-            {
-                try
-                {
-                    SetText("FILTER_NAME", "FILTER_NAME_VALUE", value);
-                }
-                catch
-                {
-                }
-            }
-        }
+		public string[] FilterNames
+		{
+			get
+			{
+				try
+				{
+					List<string> ret = new List<string>();
+					int i = 1;
+					foreach(INDIText text in GetTextVector("FILTER_NAME").Values)
+						ret.Add(text.value);
+					return ret.ToArray();
+				}
+				catch
+				{
+					throw new ArgumentException();
+				}
+			}
+			set
+			{
+				try
+				{
+					int i = 0;
+					foreach (string val in value)
+					{
+						GetTextVector("FILTER_NAME").Values[i++].value = val;
+					}
+				}
+				catch
+				{
+					throw new ArgumentException();
+				}
+			}
+		}
+
+		public string FilterName
+		{
+			get
+			{
+				try
+				{
+					return GetText("FILTER_NAME", "FILTER_SLOT_NAME_" + FilterSlot).value;
+				}
+				catch
+				{
+					throw new ArgumentException();
+				}
+			}
+			set
+			{
+				try
+				{
+					SetText("FILTER_NAME", "FILTER_SLOT_NAME_" + FilterSlot, value);
+				}
+				catch
+				{
+				}
+			}
+		}
         #endregion
     }
 }

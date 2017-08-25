@@ -18,6 +18,13 @@ using System.Collections.Generic;
 
 namespace INDI
 {
+	public class INDIMessageEventArgs : IsNewMessageEventArgs
+	{
+		public INDIMessageEventArgs(string message, DateTime timestamp, string dev)
+			:base (message, timestamp, dev)
+		{
+		}
+	}
     #region Enums
     public enum INDIUploadMode
     {
@@ -27,7 +34,8 @@ namespace INDI
     };
     #endregion
     public class INDIDevice : INDIBaseDevice, IDisposable
-    {
+	{
+		public event EventHandler<INDIMessageEventArgs> IsNewMessage = null;
         #region Constructors / Initialization
         public INDIDevice(string name, INDIClient host, bool client = true)
             : base(name, host, client)
