@@ -135,8 +135,8 @@ namespace INDI
         Thread ReadThread;
         Thread SendThread;
         Boolean ThreadsRunning;
-        String _inputString = String.Empty;
-        String _outputString = String.Empty;
+        String _inputString = "";
+        String _outputString = "";
         Queue inputString = new Queue();
         Queue outputString = new Queue();
         Int32 _BufferSize = 0x1000000;
@@ -189,20 +189,21 @@ namespace INDI
 				ReadThread.Start(_inputString);
             }
         }
-
+		string _lastmessage = "";
+		string lastmessage { get { return _lastmessage; } set { if(_lastmessage == "") _lastmessage = value; else _lastmessage = ""; } }
         public String OutputString
         {
             get
             {
                 if (outputString.Count > 0)
                     return (string)outputString.Dequeue();
-                return String.Empty;
+                return "";
             }
             set
             {
                 _outputString += value.Replace("\r", "").Replace("\n", "");
                 outputString.Enqueue(_outputString);
-                _outputString = String.Empty;
+                _outputString = "";
             }
         }
         #endregion
@@ -245,7 +246,7 @@ namespace INDI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            Address = String.Empty;
+            Address = "";
             Port = 0;
             stream = s;
         }
@@ -254,7 +255,7 @@ namespace INDI
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            Address = String.Empty;
+            Address = "";
             Port = 0;
             stream = null;
         }
@@ -326,6 +327,7 @@ namespace INDI
 					if (outputString.Count > 0 && Connected)
 					{
 						string message = OutputString;
+						lastmessage = message;
 						if (!String.IsNullOrEmpty(message))
 						{
 							byte[] buffer = Encoding.UTF8.GetBytes(message);
@@ -348,7 +350,6 @@ namespace INDI
 			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 			string message = "";
 			int tmr = 0;
-			int available = 0;
 			while (ThreadsRunning)
 			{
 				try
@@ -370,6 +371,7 @@ namespace INDI
                         }
                         if(tmr++ > 5)
                         {
+							OutputString = lastmessage;
                             message = "";
                         }
 					}
@@ -450,7 +452,7 @@ namespace INDI
 							}
 							if (action == "del" && target.Contains ("property")) {
 								try {
-									if (IsDelProperty != null && name != String.Empty)
+									if (IsDelProperty != null && name != "")
 										IsDelProperty (this, new IsDelPropertyEventArgs (name, reader.GetAttribute ("device")));
 								} catch {
 								}
@@ -474,7 +476,7 @@ namespace INDI
 								group = group == null ? "" : group;
 								permission = permission == null ? "ro" : permission;
 								rule = rule == null ? "" : rule;
-								if (device == String.Empty || vectorname == String.Empty)
+								if (device == "" || vectorname == "")
 									break;
 								AddDevice (new INDIDevice (device, this));
 								if (target.Contains ("blob")) {
@@ -557,7 +559,7 @@ namespace INDI
 							break;
 						case XmlNodeType.EndElement:
 							if (reader.Name.ToLower ().Contains ("vector")) {
-								if (device == String.Empty || vectorname == String.Empty)
+								if (device == "" || vectorname == "")
 									break;
 								if (target.Contains ("blob")) {
 									if (IsNewBlob != null)
@@ -593,6 +595,7 @@ namespace INDI
 				return false;
 			}
 		}
+
 		static string RemoveInvalidXmlChars(string text) {
 			var validXmlChars = text.Where(ch => XmlConvert.IsXmlChar(ch)).ToArray();
 			return new string(validXmlChars);
@@ -608,9 +611,12 @@ namespace INDI
 		}
         #endregion
         #region Device releated methods
+
+        public DRIVER_INTERFACE Interfaces = DRIVER_INTERFACE.GENERAL_INTERFACE;
+
         public void AddDevice(INDIDevice dev)
         {
-            if (GetDevice(dev.Name) == null && dev != null && dev.Name != String.Empty)
+            if (GetDevice(dev.Name) == null && dev != null && dev.Name != "" && (dev.DriverInterface & Interfaces) == Interfaces)
             {
                 Devices.Add(dev);
                 if (DeviceAdded != null)
@@ -643,8 +649,8 @@ namespace INDI
 
         public string DefineProperties(string device = "")
         {
-            string ret = String.Empty;
-            if (device == String.Empty || device == null)
+            string ret = "";
+            if (device == "" || device == null)
             {
                 foreach (INDIDevice d in Devices)
                     ret += d.DefineProperties();

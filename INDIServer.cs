@@ -205,7 +205,7 @@ namespace INDI
                     {
                         m = Encoding.UTF8.GetBytes(message);
                         s.Write(m, 0, m.Length);
-                        message = string.Empty;
+                        message = "";
                     }
                 }
                 catch

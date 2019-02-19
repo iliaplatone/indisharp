@@ -249,6 +249,7 @@ namespace INDI
                 new INDINumber("DM_UP_DISPLACEMENT", "UP displacement of the mount center (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0),
                 new INDINumber("DM_OTA_OFFSET", "Distance from the optical axis to the mount center (m)", "%3.3f", 0.00, 50.0, 0.001, 0.0)
             }));
+                DriverInterface |= DRIVER_INTERFACE.DOME_INTERFACE;
             }
         }
         #endregion

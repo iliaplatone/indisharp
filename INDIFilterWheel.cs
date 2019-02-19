@@ -150,6 +150,7 @@ namespace INDI
             {
                 new INDIText("FILTER_NAME", "Slot name", "LIGHT")
             }));
+                DriverInterface |= DRIVER_INTERFACE.FILTER_INTERFACE;
             }
         }
         #endregion
@@ -216,7 +217,7 @@ namespace INDI
 			{
 				try
 				{
-					return (Int32)GetNumber("FILTER_SLOT", "FILTER_SLOT_VALUE").max;
+					return FilterNames.Length;
 				}
 				catch
 				{
@@ -260,7 +261,6 @@ namespace INDI
 				try
 				{
 					List<string> ret = new List<string>();
-					int i = 1;
 					foreach(INDIText text in GetTextVector("FILTER_NAME").Values)
 						ret.Add(text.value);
 					return ret.ToArray();
@@ -274,10 +274,10 @@ namespace INDI
 			{
 				try
 				{
-					int i = 0;
+					int i = 1;
 					foreach (string val in value)
 					{
-						GetTextVector("FILTER_NAME").Values[i++].value = val;
+						SetText("FILTER_NAME", "FILTER_SLOT_NAME_" + i++, val);
 					}
 				}
 				catch

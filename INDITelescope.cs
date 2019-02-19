@@ -321,6 +321,7 @@ namespace INDI
                 new INDISwitch("PIER_EAST", "Pointing West", false),
                 new INDISwitch("PIER_WEST", "Pointing East", false)
             }));
+                DriverInterface |= DRIVER_INTERFACE.TELESCOPE_INTERFACE;
             }
         }
         #endregion
@@ -427,28 +428,42 @@ namespace INDI
             CoordSet = INDICoordSet.SYNC;
             Double[] values = { Altitude, Azimuth };
             SetNumberVector("HORIZONTAL_COORD", values);
-        }
+		}
 
-        public void SlewToAltAz(Double Altitude, Double Azimuth)
-        {
-            CoordSet = INDICoordSet.SLEW;
-            Double[] values = { Altitude, Azimuth };
-            SetNumberVector("HORIZONTAL_COORD", values);
-        }
+		public void SlewToAltAz(Double Altitude, Double Azimuth)
+		{
+			CoordSet = INDICoordSet.SLEW;
+			Double[] values = { Altitude, Azimuth };
+			SetNumberVector("HORIZONTAL_COORD", values);
+		}
+
+		public void TrackToAltAz(Double Altitude, Double Azimuth)
+		{
+			CoordSet = INDICoordSet.TRACK;
+			Double[] values = { Altitude, Azimuth };
+			SetNumberVector("HORIZONTAL_COORD", values);
+		}
 
         public void SyncToRaDec(Double RightAscension, Double Declination)
         {
             CoordSet = INDICoordSet.SYNC;
             Double[] values = { RightAscension, Declination };
             SetNumberVector("EQUATORIAL_EOD_COORD", values);
-        }
+		}
 
-        public void SlewToRaDec(Double RightAscension, Double Declination)
-        {
-            CoordSet = INDICoordSet.SLEW;
-            Double[] values = { RightAscension, Declination };
-            SetNumberVector("EQUATORIAL_EOD_COORD", values);
-        }
+		public void SlewToRaDec(Double RightAscension, Double Declination)
+		{
+			CoordSet = INDICoordSet.SLEW;
+			Double[] values = { RightAscension, Declination };
+			SetNumberVector("EQUATORIAL_EOD_COORD", values);
+		}
+
+		public void TrackToRaDec(Double RightAscension, Double Declination)
+		{
+			CoordSet = INDICoordSet.TRACK;
+			Double[] values = { RightAscension, Declination };
+			SetNumberVector("EQUATORIAL_EOD_COORD", values);
+		}
 
         public void Abort()
         {
@@ -665,32 +680,57 @@ namespace INDI
                 {
                 }
             }
-        }
+		}
 
-        public Boolean Parked
-        {
-            get
-            {
-                try
-                {
-                    return GetSwitch("TELESCOPE_PARK", "PARK").value;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-            set
-            {
-                try
-                {
-                    SetSwitchVector("TELESCOPE_PARK", value ? 0 : 1);
-                }
-                catch
-                {
-                }
-            }
-        }
+		public Boolean Parked
+		{
+			get
+			{
+				try
+				{
+					return GetSwitch("TELESCOPE_PARK", "PARK").value;
+				}
+				catch
+				{
+					return false;
+				}
+			}
+			set
+			{
+				try
+				{
+					SetSwitchVector("TELESCOPE_PARK", value ? 0 : 1);
+				}
+				catch
+				{
+				}
+			}
+		}
+
+		public Boolean Track
+		{
+			get
+			{
+				try
+				{
+					return GetSwitch("TELESCOPE_TRACK_STATE", "TRACK_ON").value;
+				}
+				catch
+				{
+					return false;
+				}
+			}
+			set
+			{
+				try
+				{
+					SetSwitchVector("TELESCOPE_TRACK_STATE", value ? 0 : 1);
+				}
+				catch
+				{
+				}
+			}
+		}
 
         public string Diameter
         {

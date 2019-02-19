@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\NuGet.Build.Packaging.0.2.0\build\NuGet.Build.Packaging.props" Condition="Exists('packages\NuGet.Build.Packaging.0.2.0\build\NuGet.Build.Packaging.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,6 +8,21 @@
     <OutputType>Library</OutputType>
     <RootNamespace>INDI</RootNamespace>
     <AssemblyName>INDI</AssemblyName>
+    <PackageId>INDISharp.INDI</PackageId>
+    <PackageVersion>0.8.0</PackageVersion>
+    <Authors>Ilia Platone</Authors>
+    <PackageIconUrl>https://indilib.org/images/indi_logo.png</PackageIconUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageLicenseUrl>https://www.gnu.org/licenses/gpl-3.0.txt</PackageLicenseUrl>
+    <Owners>Ilia Platone</Owners>
+    <PackageProjectUrl>https://indilib.org</PackageProjectUrl>
+    <Summary>INDILib porting to a C# DLL: automation &amp; control of astronomical instruments</Summary>
+    <PackageTags>astronomy; remote control; indilib; indi; linux; windows; ccd; telescope; stars</PackageTags>
+    <Title>INDI#</Title>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <Description>INDILib porting to a C# DLL: automation &amp; control of astronomical instruments</Description>
+    <PackOnBuild>true</PackOnBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,5 +68,9 @@
     <Compile Include="INDICamera.cs" />
     <Compile Include="INDIDetector.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)/Microsoft.CSharp.targets" />
+  <Import Project="packages\NuGet.Build.Packaging.0.2.0\build\NuGet.Build.Packaging.targets" Condition="Exists('packages\NuGet.Build.Packaging.0.2.0\build\NuGet.Build.Packaging.targets')" />
 </Project>

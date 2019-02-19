@@ -1,4 +1,4 @@
-/* This file is part of INDISharp, Copyright � 2014-2015 Ilia Platone <info@iliaplatone.com>.
+﻿/* This file is part of INDISharp, Copyright © 2014-2015 Ilia Platone <info@iliaplatone.com>.
 *
 *  INDISharp is free software: you can redistribute it and/or modify
 *  it under the terms of the GNU General Public License as published by
@@ -201,7 +201,8 @@ namespace INDI
 					new INDIBlob ("CONTINUUM", Name + " continuum data", ".fits", new byte[1], 1),
 					new INDIBlob ("SPECTRUM", Name + " spectrum data", ".fits", new byte[1], 1),
 				}));
-			}
+                DriverInterface |= DRIVER_INTERFACE.DETECTOR_INTERFACE;
+            }
 		}
         #endregion
 

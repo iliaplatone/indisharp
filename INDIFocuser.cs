@@ -187,6 +187,7 @@ namespace INDI
             {
                 new INDISwitch("ABORT", "Abort focuser motion", false)
             }));
+                DriverInterface |= DRIVER_INTERFACE.FOCUSER_INTERFACE;
             }
         }
         #endregion
