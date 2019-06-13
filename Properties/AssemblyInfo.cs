@@ -7,4 +7,4 @@
 [assembly: AssemblyCopyright ("Ilia Platone")]
 [assembly: AssemblyTrademark ("")]
 [assembly: AssemblyCulture ("")]
-[assembly: AssemblyVersion ("0.8.0.*")]
+[assembly: AssemblyVersion ("0.10.0.*")]
