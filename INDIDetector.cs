@@ -45,20 +45,17 @@ namespace INDI
             Values = vector.Values;
             switch (vector.Name)
             {
-                case "DETECTOR_CAPTURE":
-                    Type = INDIDetectorNumberType.Capture;
+                case "SENSOR_INTEGRATION":
+                    Type = INDIDetectorNumberType.Integration;
                     break;
-                case "DETECTOR_ABORT_CAPTURE":
-                    Type = INDIDetectorNumberType.AbortCapture;
+				case "SENSOR_ABORT_INTEGRATION":
+					Type = INDIDetectorNumberType.AbortIntegration;
                     break;
-                case "DETECTOR_TEMPERATURE":
+                case "SENSOR_TEMPERATURE":
                     Type = INDIDetectorNumberType.Temperature;
                     break;
-                case "DETECTOR_COOLER_POWER":
-                    Type = INDIDetectorNumberType.CoolerPower;
-                    break;
-                case "DETECTOR_INFO":
-                    Type = INDIDetectorNumberType.Informations;
+                case "DETECTOR_SETTINGS":
+                    Type = INDIDetectorNumberType.Settings;
                     break;
 
                 case "TIME_LST":
@@ -141,13 +138,12 @@ namespace INDI
         Atmosphere,
         Other,
 
-        Capture,
-        AbortCapture,
-        FrameSize,
-        Temperature,
-        CoolerPower,
-        Binning,
-        Informations,
+		Temperature,
+		Settings,
+        Integration,
+		AbortIntegration,
+		Trigger,
+		Resolution,
     }
     public enum INDIDetectorSwitchType
     {
