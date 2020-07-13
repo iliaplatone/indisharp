@@ -28,6 +28,7 @@ namespace INDI.Forms
         public INDIClient client = null;
         TextBox Address = new TextBox();
         ComboBox Device = new ComboBox();
+        ComboBox DeviceType = new ComboBox();
         public string deviceSelected = "";
         public INDIChooser(string address = "127.0.0.1", int port = 7624)
         {
@@ -56,11 +57,22 @@ namespace INDI.Forms
                 Device.Items.Clear();
                 client = new INDIClient(Address.Text);
                 client.DeviceAdded += Indi_DeviceAdded;
+                client.Interfaces = (DRIVER_INTERFACE)Enum.Parse(typeof(DRIVER_INTERFACE), DeviceType.SelectedItem.ToString());
                 client.Connect();
                 if (client.Connected)
                     client.QueryProperties();
             };
             Controls.Add(b);
+            DeviceType.FlatStyle = FlatStyle.Flat;
+            DeviceType.Text = "Select device";
+            DeviceType.Size = new Size(190, 23);
+            DeviceType.Location = new Point(5, y);
+            string[] types = Enum.GetNames(typeof(DRIVER_INTERFACE));
+            DeviceType.Items.AddRange(types);
+            DeviceType.DropDownStyle = ComboBoxStyle.DropDownList;
+            DeviceType.SelectedIndexChanged += Device_SelectedIndexChanged;
+            y += 33;
+            Controls.Add(DeviceType);
             Device.FlatStyle = FlatStyle.Flat;
             Device.Text = "Select device";
             Device.Size = new Size(190, 23);
@@ -208,7 +220,7 @@ namespace INDI.Forms
 
         void AddDevice(string device)
         {
-            if (device == Device || device == string.Empty)
+            if (device == Device || device == "")
             {
                 TabPage dev = new TabPage();
                 dev.Name = device;
@@ -225,7 +237,7 @@ namespace INDI.Forms
 
         void AddGroup(string name, string device)
         {
-            if (device == Device || device == string.Empty)
+            if (device == Device || device == "")
             {
                 try
                 {
@@ -277,7 +289,7 @@ namespace INDI.Forms
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            if ((e.Device == Device || e.Device == string.Empty) && e.Vector.Name != String.Empty && e.Vector.Group != String.Empty)
+            if ((e.Device == Device || e.Device == "") && e.Vector.Name != "" && e.Vector.Group != "")
             {
                 try
                 {
@@ -376,7 +388,7 @@ namespace INDI.Forms
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            if ((e.Device == Device || e.Device == string.Empty) && e.Vector.Name != String.Empty && e.Vector.Group != String.Empty)
+            if ((e.Device == Device || e.Device == "") && e.Vector.Name != "" && e.Vector.Group != "")
             {
                 try
                 {
@@ -459,7 +471,7 @@ namespace INDI.Forms
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            if ((e.Device == Device || e.Device == string.Empty) && e.Vector.Name != String.Empty && e.Vector.Group != String.Empty)
+            if ((e.Device == Device || e.Device == "") && e.Vector.Name != "" && e.Vector.Group != "")
             {
                 try
                 {
@@ -535,7 +547,7 @@ namespace INDI.Forms
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            if (e.Device == Device || e.Device == string.Empty)
+            if (e.Device == Device || e.Device == "")
             {
                 try
                 {

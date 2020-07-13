@@ -23,8 +23,9 @@ using System.Xml.Linq;
 namespace INDI
 {
     public class INDIBaseDevice
-    {
-
+	{
+		bool ConnectionState = false;
+		public event EventHandler<IsNewSwitchEventArgs> ConnectedChanged = null;
         public string Name;
         List<ITextVector> Texts;
         List<INumberVector> Numbers;
@@ -47,8 +48,9 @@ namespace INDI
             host.IsDelProperty += isDelProperty;
             host.IsNewText += isNewText;
             host.IsNewNumber += isNewNumber;
-            host.IsNewSwitch += isNewSwitch;
-            host.IsNewBlob += isNewBlob;
+			host.IsNewSwitch += isNewSwitch;
+			host.IsNewBlob += isNewBlob;
+			host.IsNewMessage += isNewMessage;
         }
 
         public virtual void isDelProperty(Object sender, IsDelPropertyEventArgs e)
@@ -96,21 +98,36 @@ namespace INDI
             {
                 ISwitchVector v = GetSwitchVector(e.Vector.Name);
                 if (v == null)
-                    AddSwitchVector(e.Vector);
+					AddSwitchVector(e.Vector);
+				if(e.Vector.Name == "CONNECTION" && e.Vector.Values[0].value != ConnectionState)
+				{
+					ConnectionState = e.Vector.Values[0].value;
+					ConnectedChanged?.Invoke(this, e);
+				}
             }
-        }
+		}
 
-        public virtual void isNewBlob(Object sender, IsNewBlobEventArgs e)
-        {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-            if (e.Device == Name)
-            {
-                IBlobVector v = GetBlobVector(e.Vector.Name);
-                if (v == null)
-                    AddBlobVector(e.Vector);
-            }
-        }
+		public virtual void isNewBlob(Object sender, IsNewBlobEventArgs e)
+		{
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+			if (e.Device == Name)
+			{
+				IBlobVector v = GetBlobVector(e.Vector.Name);
+				if (v == null)
+					AddBlobVector(e.Vector);
+			}
+		}
+
+		public virtual void isNewMessage(Object sender, IsNewMessageEventArgs e)
+		{
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+			if (e.Device == Name)
+			{
+				Console.WriteLine (Name + ": " + e.Message);
+			}
+		}
 
         public string EnableBLOB(Boolean enable)
         {

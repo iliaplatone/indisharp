@@ -150,6 +150,7 @@ namespace INDI
             {
                 new INDIText("FILTER_NAME", "Slot name", "LIGHT")
             }));
+                DriverInterface |= DRIVER_INTERFACE.FILTER_INTERFACE;
             }
         }
         #endregion
@@ -209,7 +210,22 @@ namespace INDI
             }
         }
         #endregion
-        #region Standard Properties
+		#region Standard Properties
+		public Int32 FilterSlots
+		{
+			get
+			{
+				try
+				{
+					return FilterNames.Length;
+				}
+				catch
+				{
+					return 0;
+				}
+			}
+		}
+
         public Int32 FilterSlot
         {
             get
@@ -236,32 +252,65 @@ namespace INDI
                 {
                 }
             }
-        }
+		}
 
-        public string FilterName
-        {
-            get
-            {
-                try
-                {
-                    return GetText("FILTER_NAME", "FILTER_NAME_VALUE").value;
-                }
-                catch
-                {
-                    throw new ArgumentException();
-                }
-            }
-            set
-            {
-                try
-                {
-                    SetText("FILTER_NAME", "FILTER_NAME_VALUE", value);
-                }
-                catch
-                {
-                }
-            }
-        }
+		public string[] FilterNames
+		{
+			get
+			{
+				try
+				{
+					List<string> ret = new List<string>();
+					foreach(INDIText text in GetTextVector("FILTER_NAME").Values)
+						ret.Add(text.value);
+					return ret.ToArray();
+				}
+				catch
+				{
+					throw new ArgumentException();
+				}
+			}
+			set
+			{
+				try
+				{
+					int i = 1;
+					foreach (string val in value)
+					{
+						SetText("FILTER_NAME", "FILTER_SLOT_NAME_" + i++, val);
+					}
+				}
+				catch
+				{
+					throw new ArgumentException();
+				}
+			}
+		}
+
+		public string FilterName
+		{
+			get
+			{
+				try
+				{
+					return GetText("FILTER_NAME", "FILTER_SLOT_NAME_" + FilterSlot).value;
+				}
+				catch
+				{
+					throw new ArgumentException();
+				}
+			}
+			set
+			{
+				try
+				{
+					SetText("FILTER_NAME", "FILTER_SLOT_NAME_" + FilterSlot, value);
+				}
+				catch
+				{
+				}
+			}
+		}
         #endregion
     }
 }
