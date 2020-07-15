@@ -520,8 +520,8 @@ namespace INDI
 								}
 								if (target.Contains ("number")) {
 									format = reader.GetAttribute ("format");
-									minimum = reader.GetAttribute ("minimum");
-									maximum = reader.GetAttribute ("maximum");
+									minimum = reader.GetAttribute ("min");
+									maximum = reader.GetAttribute ("max");
 									step = reader.GetAttribute ("step");
 									format = format == null ? "" : format;
 									minimum = minimum == null ? "1" : minimum;
