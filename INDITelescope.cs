@@ -226,103 +226,85 @@ namespace INDI
         #region Constructors / Initialization
         public INDITelescope(string name, INDIClient host, bool client = true)
             : base(name, host, client)
-        {
-            if (!client)
-            {
-                AddNumberVector(new INumberVector(Name, "EQUATORIAL_COORD", "Equatorial astrometric J2000 coordinate", "Main Control", "rw", "", new List<INDINumber>
-            {
-                new INDINumber("RA", "J2000 RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
-                new INDINumber("DEC", "J2000 Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
-            }));
-                AddNumberVector(new INumberVector(Name, "EQUATORIAL_EOD_COORD", "Equatorial astrometric epoch of date coordinate", "Main Control", "rw", "", new List<INDINumber>
-            {
-                new INDINumber("RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
-                new INDINumber("DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
-            }));
-                AddNumberVector(new INumberVector(Name, "TARGET_EOD_COORD", "Slew Target", "Main Control", "ro", "Main Control", new List<INDINumber>
-            {
-                new INDINumber("RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
-                new INDINumber("DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
-            }));
-                AddNumberVector(new INumberVector(Name, "HORIZONTAL_COORD", "topocentric coordinate", "Main Control", "ro", "Main Control", new List<INDINumber>
-            {
-                new INDINumber("ALT", "Altitude", "%2.12f", 0.00, 90.0, 0.000000000001, 0.0),
-                new INDINumber("AZ", "Azimuth", "%3.12f", 0.00, 360.0, 0.000000000001, 0.0)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "ON_COORD_SET", "Track mode", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("SLEW", "Slew", true),
-                new INDISwitch("TRACK", "Track", false),
-                new INDISwitch("SYNC", "Sync", false)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_MOTION_NS", "Move telescope north or south", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("MOTION_NORTH", "Move North", false),
-                new INDISwitch("MOTION_SOUTH", "Move South", false)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_MOTION_WE", "Move telescope west or east", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("MOTION_WEST", "Move West", false),
-                new INDISwitch("MOTION_EAST", "Move East", false)
-            }));
-                AddNumberVector(new INumberVector(Name, "TELESCOPE_TIMED_GUIDE_NS", "Timed guide telescope north or south", "Motion Control", "rw", "", new List<INDINumber>
-            {
-                new INDINumber("TIMED_GUIDE_N", "Guide North", "%5.2f", 0.00, 10000.0, 0.01, 0.0),
-                new INDINumber("TIMED_GUIDE_S", "Guide South", "%2.2f", 0.00, 10000.0, 0.01, 0.0)
-            }));
-                AddNumberVector(new INumberVector(Name, "TELESCOPE_TIMED_GUIDE_WE", "Timed guide telescope west or east", "Motion Control", "rw", "", new List<INDINumber>
-            {
-                new INDINumber("TIMED_GUIDE_W", "Guide North", "%5.2f", 0.00, 10000.0, 0.01, 0.0),
-                new INDINumber("TIMED_GUIDE_E", "Guide South", "%2.2f", 0.00, 10000.0, 0.01, 0.0)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_SLEW_RATE", "Slew Rate", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("SLEW_GUIDE", "Guiding Rate", false),
-                new INDISwitch("SLEW_CENTERING", "Slow speed", false),
-                new INDISwitch("SLEW_FIND", "Medium speed", true),
-                new INDISwitch("SLEW_MAX", "Maximum speed", false),
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_PARK", "Park and unpark the telescope", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("PARK", "Park the telescope", false),
-                new INDISwitch("UNPARK", "Unpark the telescope", false)
-            }));
-                AddNumberVector(new INumberVector(Name, "TELESCOPE_PARK_POSITION", "Home park position", "Main Control", "ro", "", new List<INDINumber>
-            {
-                new INDINumber("PARK_RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
-                new INDINumber("PARK_DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_PARK_OPTION", "Park Option", "Main Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("PARK_CURRENT", "Use current park position", false),
-                new INDISwitch("PARK_DEFAULT", "Use driver's default park position", true),
-                new INDISwitch("PARK_WRITE_DATA", "Write park position", false)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_ABORT_MOTION", "Abort", "Main Control", "rw", "AtMostOne", new List<INDISwitch>
-            {
-                new INDISwitch("ABORT_MOTION", "Stop telescope", false)
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_TRACK_RATE", "Track Rate", "Main Control", "rw", "AtMostOne", new List<INDISwitch>
-            {
-                new INDISwitch("TRACK_SIDEREAL", "Track at sidereal rate", true),
-                new INDISwitch("TRACK_SOLAR", "Track at solar rate", false),
-                new INDISwitch("TRACK_LUNAR", "Track at lunar rate", false),
-                new INDISwitch("TRACK_CUSTOM", "Track at custom rate", false),
-            }));
-                AddNumberVector(new INumberVector(Name, "TELESCOPE_INFO", "Telescope informtations", "Telescope Info", "ro", "Informations", new List<INDINumber>
-            {
-                new INDINumber("TELESCOPE_APERTURE", "Telescope aperture", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
-                new INDINumber("TELESCOPE_FOCAL_LENGTH", "Telescope focal length", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
-                new INDINumber("GUIDER_APERTURE", "Guide telescope aperture", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
-                new INDINumber("GUIDER_FOCAL_LENGTH", "Guide telescope focal length", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
-            }));
-                AddSwitchVector(new ISwitchVector(Name, "TELESCOPE_PIER_SIDE", "Pier Side", "Motion Control", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("PIER_EAST", "Pointing West", false),
-                new INDISwitch("PIER_WEST", "Pointing East", false)
-            }));
-                DriverInterface |= DRIVER_INTERFACE.TELESCOPE_INTERFACE;
-            }
+		{
+			if (!client) {
+				AddNumberVector (new INumberVector (Name, "EQUATORIAL_COORD", "Equatorial astrometric J2000 coordinate", "Main Control", "rw", "", new List<INDINumber> {
+					new INDINumber ("RA", "J2000 RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+					new INDINumber ("DEC", "J2000 Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+				}));
+				AddNumberVector (new INumberVector (Name, "EQUATORIAL_EOD_COORD", "Equatorial astrometric epoch of date coordinate", "Main Control", "rw", "", new List<INDINumber> {
+					new INDINumber ("RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+					new INDINumber ("DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+				}));
+				AddNumberVector (new INumberVector (Name, "TARGET_EOD_COORD", "Slew Target", "Main Control", "ro", "Main Control", new List<INDINumber> {
+					new INDINumber ("RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+					new INDINumber ("DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+				}));
+				AddNumberVector (new INumberVector (Name, "HORIZONTAL_COORD", "topocentric coordinate", "Main Control", "ro", "Main Control", new List<INDINumber> {
+					new INDINumber ("ALT", "Altitude", "%2.12f", 0.00, 90.0, 0.000000000001, 0.0),
+					new INDINumber ("AZ", "Azimuth", "%3.12f", 0.00, 360.0, 0.000000000001, 0.0)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "ON_COORD_SET", "Track mode", "Main Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("SLEW", "Slew", true),
+					new INDISwitch ("TRACK", "Track", false),
+					new INDISwitch ("SYNC", "Sync", false)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_MOTION_NS", "Move telescope north or south", "Motion Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("MOTION_NORTH", "Move North", false),
+					new INDISwitch ("MOTION_SOUTH", "Move South", false)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_MOTION_WE", "Move telescope west or east", "Motion Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("MOTION_WEST", "Move West", false),
+					new INDISwitch ("MOTION_EAST", "Move East", false)
+				}));
+				AddNumberVector (new INumberVector (Name, "TELESCOPE_TIMED_GUIDE_NS", "Timed guide telescope north or south", "Motion Control", "rw", "", new List<INDINumber> {
+					new INDINumber ("TIMED_GUIDE_N", "Guide North", "%5.2f", 0.00, 10000.0, 0.01, 0.0),
+					new INDINumber ("TIMED_GUIDE_S", "Guide South", "%2.2f", 0.00, 10000.0, 0.01, 0.0)
+				}));
+				AddNumberVector (new INumberVector (Name, "TELESCOPE_TIMED_GUIDE_WE", "Timed guide telescope west or east", "Motion Control", "rw", "", new List<INDINumber> {
+					new INDINumber ("TIMED_GUIDE_W", "Guide North", "%5.2f", 0.00, 10000.0, 0.01, 0.0),
+					new INDINumber ("TIMED_GUIDE_E", "Guide South", "%2.2f", 0.00, 10000.0, 0.01, 0.0)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_SLEW_RATE", "Slew Rate", "Motion Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("SLEW_GUIDE", "Guiding Rate", false),
+					new INDISwitch ("SLEW_CENTERING", "Slow speed", false),
+					new INDISwitch ("SLEW_FIND", "Medium speed", true),
+					new INDISwitch ("SLEW_MAX", "Maximum speed", false),
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_PARK", "Park and unpark the telescope", "Main Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("PARK", "Park the telescope", false),
+					new INDISwitch ("UNPARK", "Unpark the telescope", false)
+				}));
+				AddNumberVector (new INumberVector (Name, "TELESCOPE_PARK_POSITION", "Home park position", "Main Control", "ro", "", new List<INDINumber> {
+					new INDINumber ("PARK_RA", "JNow RA", "%2.12f", 0.00, 24.0, 0.000000000001, 0.0),
+					new INDINumber ("PARK_DEC", "JNow Dec", "%2.12f", -90.00, 90.0, 0.000000000001, 0.0)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_PARK_OPTION", "Park Option", "Main Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("PARK_CURRENT", "Use current park position", false),
+					new INDISwitch ("PARK_DEFAULT", "Use driver's default park position", true),
+					new INDISwitch ("PARK_WRITE_DATA", "Write park position", false)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_ABORT_MOTION", "Abort", "Main Control", "rw", "AtMostOne", new List<INDISwitch> {
+					new INDISwitch ("ABORT_MOTION", "Stop telescope", false)
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_TRACK_RATE", "Track Rate", "Main Control", "rw", "AtMostOne", new List<INDISwitch> {
+					new INDISwitch ("TRACK_SIDEREAL", "Track at sidereal rate", true),
+					new INDISwitch ("TRACK_SOLAR", "Track at solar rate", false),
+					new INDISwitch ("TRACK_LUNAR", "Track at lunar rate", false),
+					new INDISwitch ("TRACK_CUSTOM", "Track at custom rate", false),
+				}));
+				AddNumberVector (new INumberVector (Name, "TELESCOPE_INFO", "Telescope informtations", "Telescope Info", "ro", "Informations", new List<INDINumber> {
+					new INDINumber ("TELESCOPE_APERTURE", "Telescope aperture", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+					new INDINumber ("TELESCOPE_FOCAL_LENGTH", "Telescope focal length", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+					new INDINumber ("GUIDER_APERTURE", "Guide telescope aperture", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+					new INDINumber ("GUIDER_FOCAL_LENGTH", "Guide telescope focal length", "%5.2f", 0.00, 10000.0, 0.01, 200.0),
+				}));
+				AddSwitchVector (new ISwitchVector (Name, "TELESCOPE_PIER_SIDE", "Pier Side", "Motion Control", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("PIER_EAST", "Pointing West", false),
+					new INDISwitch ("PIER_WEST", "Pointing East", false)
+				}));
+				DriverInterface |= DRIVER_INTERFACE.TELESCOPE_INTERFACE;
+			}
         }
         #endregion
 

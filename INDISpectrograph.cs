@@ -71,7 +71,7 @@ namespace INDI
                     Type = INDISpectrographNumberType.Other;
                     break;
             }
-        }
+		}
     }
     public class INDISpectrographSwitchEventArgs : IsNewSwitchEventArgs
     {
@@ -202,7 +202,7 @@ namespace INDI
 					new INDIBlob ("SPECTRUM", Name + " spectrum data", ".fits", new byte[1], 1),
 				}));
                 DriverInterface |= DRIVER_INTERFACE.SPECTROGRAPH_INTERFACE;
-            }
+			}
 		}
         #endregion
 

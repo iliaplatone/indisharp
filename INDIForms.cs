@@ -57,7 +57,6 @@ namespace INDI.Forms
                 Device.Items.Clear();
                 client = new INDIClient(Address.Text);
                 client.DeviceAdded += Indi_DeviceAdded;
-                client.Interfaces = (DRIVER_INTERFACE)Enum.Parse(typeof(DRIVER_INTERFACE), DeviceType.SelectedItem.ToString());
                 client.Connect();
                 if (client.Connected)
                     client.QueryProperties();

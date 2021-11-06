@@ -364,7 +364,7 @@ namespace INDI
                             if(IsValidXml(message))
 							{
 								Thread.Sleep(1000);
-                                ParseXML(message);
+								ParseXML(message.Replace("\n", "").Replace("\r", ""));
                                 message = "";
 							}
 							Thread.Sleep(300);
@@ -376,7 +376,7 @@ namespace INDI
                         }
 					}
 					else {
-						ParseXML((String)s);
+						ParseXML(((String)s).Replace("\n", "").Replace("\r", ""));
                         break;
 					}
 				}

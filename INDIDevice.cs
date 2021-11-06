@@ -61,9 +61,7 @@ namespace INDI
             : base(name, host, client)
         {
             Host.AddDevice(this);
-            if (!client)
-            {
-                AddSwitchVector(new ISwitchVector(Name, "CONNECTION", "Connection", "", "rw", "OneOfMany", new List<INDISwitch>
+            AddSwitchVector(new ISwitchVector(Name, "CONNECTION", "Connection", "", "rw", "OneOfMany", new List<INDISwitch>
             {
                 new INDISwitch("CONNECT", "Connect", true),
                 new INDISwitch("DISCONNECT", "Disconnect", false)
@@ -93,11 +91,10 @@ namespace INDI
                 new INDINumber("PRESSURE", "Pressure (hPa)", "%5.3f", 0.0, 400.0, 0.0, 0.0),
                 new INDINumber("HUMIDITY", "Humidity (%)", "%3.3f", 0.0, 100.0, 0.0, 0.0)
             }));
-                DriverInterface = DRIVER_INTERFACE.GENERAL_INTERFACE;
-                DriverExec = Assembly.GetCallingAssembly().GetName().Name;
-                DriverVersion = Assembly.GetCallingAssembly().GetName().Version.ToString();
-                DriverName = Name;
-            }
+            DriverInterface = DRIVER_INTERFACE.GENERAL_INTERFACE;
+            DriverExec = Assembly.GetCallingAssembly().GetName().Name;
+            DriverVersion = Assembly.GetCallingAssembly().GetName().Version.ToString();
+            DriverName = Name;
         }
         public void Dispose()
         {

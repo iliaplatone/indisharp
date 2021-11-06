@@ -184,22 +184,22 @@ namespace INDI
         public List<string> GetGroups()
         {
             List<string> ret = new List<string>();
-            foreach (ISwitchVector d in Host.GetDevice(Name).Switches)
+            foreach (ISwitchVector d in Switches)
             {
                 if (!ret.Contains(d.Group))
                     ret.Add(d.Group);
             }
-            foreach (INumberVector d in Host.GetDevice(Name).Numbers)
+            foreach (INumberVector d in Numbers)
             {
                 if (!ret.Contains(d.Group))
                     ret.Add(d.Group);
             }
-            foreach (ITextVector d in Host.GetDevice(Name).Texts)
+            foreach (ITextVector d in Texts)
             {
                 if (!ret.Contains(d.Group))
                     ret.Add(d.Group);
             }
-            foreach (IBlobVector d in Host.GetDevice(Name).Blobs)
+            foreach (IBlobVector d in Blobs)
             {
                 if (!ret.Contains(d.Group))
                     ret.Add(d.Group);
@@ -209,8 +209,7 @@ namespace INDI
 
         public ISwitchVector GetSwitchVector(string name)
         {
-			INDIDevice d = Host.GetDevice (Name);
-            foreach (ISwitchVector s in d.Switches)
+            foreach (ISwitchVector s in Switches)
                 if (s.Name == name && name != "")
                     return s;
             return null;
@@ -218,8 +217,7 @@ namespace INDI
 
         public INumberVector GetNumberVector(string name)
 		{
-			INDIDevice d = Host.GetDevice (Name);
-			foreach (INumberVector s in d.Numbers)
+			foreach (INumberVector s in Numbers)
                 if (s.Name == name && name != "")
                     return s;
             return null;
@@ -227,7 +225,7 @@ namespace INDI
 
         public ITextVector GetTextVector(string name)
         {
-            foreach (ITextVector s in Host.GetDevice(Name).Texts)
+            foreach (ITextVector s in Texts)
                 if (s.Name == name && name != "")
                     return s;
             return null;
@@ -235,7 +233,7 @@ namespace INDI
 
         public IBlobVector GetBlobVector(string name)
         {
-            foreach (IBlobVector s in Host.GetDevice(Name).Blobs)
+            foreach (IBlobVector s in Blobs)
                 if (s.Name == name && name != "")
                     return s;
             return null;
