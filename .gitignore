@@ -8,6 +8,9 @@
 *.suo
 *.user
 *.sln.docstates
+*.nuspec
+*.nupkg
+*.mdproj
 
 # Build results
 [Dd]ebug/

@@ -1,18 +1,27 @@
-﻿/* This file is part of INDISharp, Copyright © 2014-2015 Ilia Platone <info@iliaplatone.com>.
-*
-*  INDISharp is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation, either version 3 of the License, or
-*  (at your option) any later version.
-*  
-*  INDISharp is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*  
-*  You should have received a copy of the GNU General Public License
-*  along with INDISharp.  If not, see <http://www.gnu.org/licenses/>.
+/*
+ MIT License
+
+ Copyright (c) 2015-2021 Ilia Platone
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -61,40 +70,36 @@ namespace INDI
             : base(name, host, client)
         {
             Host.AddDevice(this);
-            AddSwitchVector(new ISwitchVector(Name, "CONNECTION", "Connection", "", "rw", "OneOfMany", new List<INDISwitch>
-            {
-                new INDISwitch("CONNECT", "Connect", true),
-                new INDISwitch("DISCONNECT", "Disconnect", false)
-            }));
-                AddTextVector(new ITextVector(Name, "DEVICE_PORT", "Connection port", "Connection", "ro", "", new List<INDIText>
-            {
-                new INDIText("PORT", "Connection port", "COM1")
-            }));
-                AddNumberVector(new INumberVector(Name, "TIME_LST", "Local sidereal time", "Device Properties", "ro", "", new List<INDINumber>
-            {
-                new INDINumber("LST", "Local sidereal time", "%16.0f", 0.0, 800000000.0, 0.0, 0.0)
-            }));
-                AddTextVector(new ITextVector(Name, "TIME_UTC", "UTC Time & Offset", "Device Properties", "ro", "", new List<INDIText>
-            {
-                new INDIText("UTC", "UTC time", "0"),
-                new INDIText("OFFSET", "UTC offset", "0")
-            }));
-                AddNumberVector(new INumberVector(Name, "GEOGRAPHIC_COORD", "Earth geodetic coordinate", "Device Properties", "ro", "", new List<INDINumber>
-            {
-                new INDINumber("LAT", "Site latitude", "%2.3f", -90.0, 90.0, 0.0, 0.0),
-                new INDINumber("LONG", "Site longitude", "%2.3f", 0.0, 360.0, 0.0, 0.0),
-                new INDINumber("ELEV", "Site elevation", "%2.3f", 0.0, 360.0, 0.0, 0.0)
-            }));
-                AddNumberVector(new INumberVector(Name, "ATMOSPHERE", "Weather conditions", "Device Properties", "ro", "", new List<INDINumber>
-            {
-                new INDINumber("TEMPERATURE", "Temperature (K)", "%3.3f", -273.0, 180.0, 0.0, 0.0),
-                new INDINumber("PRESSURE", "Pressure (hPa)", "%5.3f", 0.0, 400.0, 0.0, 0.0),
-                new INDINumber("HUMIDITY", "Humidity (%)", "%3.3f", 0.0, 100.0, 0.0, 0.0)
-            }));
-            DriverInterface = DRIVER_INTERFACE.GENERAL_INTERFACE;
-            DriverExec = Assembly.GetCallingAssembly().GetName().Name;
-            DriverVersion = Assembly.GetCallingAssembly().GetName().Version.ToString();
-            DriverName = Name;
+			if (!client) {
+				AddSwitchVector (new ISwitchVector (Name, "CONNECTION", "Connection", "", "rw", "OneOfMany", new List<INDISwitch> {
+					new INDISwitch ("CONNECT", "Connect", true),
+					new INDISwitch ("DISCONNECT", "Disconnect", false)
+				}));
+				AddTextVector (new ITextVector (Name, "DEVICE_PORT", "Connection port", "Connection", "ro", "", new List<INDIText> {
+					new INDIText ("PORT", "Connection port", "COM1")
+				}));
+				AddNumberVector (new INumberVector (Name, "TIME_LST", "Local sidereal time", "Device Properties", "ro", "", new List<INDINumber> {
+					new INDINumber ("LST", "Local sidereal time", "%16.0f", 0.0, 800000000.0, 0.0, 0.0)
+				}));
+				AddTextVector (new ITextVector (Name, "TIME_UTC", "UTC Time & Offset", "Device Properties", "ro", "", new List<INDIText> {
+					new INDIText ("UTC", "UTC time", "0"),
+					new INDIText ("OFFSET", "UTC offset", "0")
+				}));
+				AddNumberVector (new INumberVector (Name, "GEOGRAPHIC_COORD", "Earth geodetic coordinate", "Device Properties", "ro", "", new List<INDINumber> {
+					new INDINumber ("LAT", "Site latitude", "%2.3f", -90.0, 90.0, 0.0, 0.0),
+					new INDINumber ("LONG", "Site longitude", "%2.3f", 0.0, 360.0, 0.0, 0.0),
+					new INDINumber ("ELEV", "Site elevation", "%2.3f", 0.0, 360.0, 0.0, 0.0)
+				}));
+				AddNumberVector (new INumberVector (Name, "ATMOSPHERE", "Weather conditions", "Device Properties", "ro", "", new List<INDINumber> {
+					new INDINumber ("TEMPERATURE", "Temperature (K)", "%3.3f", -273.0, 180.0, 0.0, 0.0),
+					new INDINumber ("PRESSURE", "Pressure (hPa)", "%5.3f", 0.0, 400.0, 0.0, 0.0),
+					new INDINumber ("HUMIDITY", "Humidity (%)", "%3.3f", 0.0, 100.0, 0.0, 0.0)
+				}));
+				DriverInterface = DRIVER_INTERFACE.GENERAL_INTERFACE;
+				DriverExec = Assembly.GetCallingAssembly ().GetName ().Name;
+				DriverVersion = Assembly.GetCallingAssembly ().GetName ().Version.ToString ();
+				DriverName = Name;
+			}
         }
         public void Dispose()
         {
