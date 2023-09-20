@@ -1,4 +1,4 @@
-# indisharp
+# INDISharp
 INDI library porting to a C# DLL: automation &amp; control of astronomical instruments
 
 INDISharp does not include any native code and can also be compiled for AnyCPU so is totally portable on many devices or processors. It needs only a C# JIT to run and some essential library usually present into .Net frameworks already.
