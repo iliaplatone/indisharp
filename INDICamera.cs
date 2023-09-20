@@ -22,6 +22,11 @@
  SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
+
 namespace INDI
 {
     #region Custom Event Argument classes
