@@ -145,7 +145,8 @@ namespace indiclient
                     {
                         if (ev.Vector.Index == 0)
                         {
-                            TelescopeAdded(this, new TelescopeAddedEventArgs(new INDITelescope(dev.Name, client)));
+                            if(TelescopeAdded != null)
+                                TelescopeAdded(this, new TelescopeAddedEventArgs(new INDITelescope(dev.Name, client)));
                         };
                         client.QueryProperties();
                     };
@@ -155,7 +156,8 @@ namespace indiclient
                         {
                             RA = telescope.Ra;
                             Dec = telescope.Dec;
-                            CoordinatesUpdated(this, new CoordinatesUpdatedEventArgs(RA, Dec));
+                            if(CoordinatesUpdated != null)
+                                CoordinatesUpdated(this, new CoordinatesUpdatedEventArgs(RA, Dec));
                         }
                     };
                     telescope.Connected = true;
